@@ -299,21 +299,7 @@ export default function AdminCollections() {
                 />
               </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-bold mb-2" style={{ color: '#1b2f3e' }}>
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Short description of this collection"
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border text-sm focus:outline-none resize-none"
-                  style={{ borderColor: '#e5edf2', color: '#1b2f3e' }}
-                />
-              </div>
+
 
               {/* Image Upload */}
               <div>

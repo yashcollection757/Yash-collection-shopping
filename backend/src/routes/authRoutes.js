@@ -12,6 +12,7 @@ import {
   forgotPasswordOtp,
   verifyOtp,
   verifyOtpAndResetPassword,
+  testEmail,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
@@ -25,6 +26,7 @@ router.post('/reset-password/:token', asyncHandler(resetPassword));
 router.post('/forgot-password-otp', asyncHandler(forgotPasswordOtp));
 router.post('/verify-otp', asyncHandler(verifyOtp));
 router.post('/verify-otp-reset-password', asyncHandler(verifyOtpAndResetPassword));
+router.post('/test-email', asyncHandler(testEmail));
 router.get('/profile', protect, asyncHandler(getProfile));
 router.put('/profile', protect, asyncHandler(updateProfile));
 router.get('/users', asyncHandler(getAllUsers));

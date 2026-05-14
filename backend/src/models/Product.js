@@ -14,7 +14,6 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Please provide product category'],
-      enum: ['GRS', 'OPEN', 'CORD SET', 'GRS CAP', 'JKT', 'DORI', 'GRS RN', 'GIFT SET', 'U CHOICE'],
     },
     image: {
       type: String,

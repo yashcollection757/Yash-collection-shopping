@@ -18,21 +18,21 @@ export default function AdminOrders() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadOrders();
-    // Refresh orders every 3 seconds for real-time updates
-    const interval = setInterval(loadOrders, 3000);
+    loadOrders(true);
+    // Refresh orders every 30 seconds for real-time updates without blinking
+    const interval = setInterval(() => loadOrders(false), 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadOrders = async () => {
+  const loadOrders = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await fetchAllOrders();
       setOrders(data);
     } catch (err) {
-      setError('Failed to load orders');
+      if (showLoading) setError('Failed to load orders');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

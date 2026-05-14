@@ -7,6 +7,7 @@ import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES, API_CONSTANTS } from '..
 import { logger } from '../utils/logger.js';
 import sendEmail from '../utils/sendEmail.js';
 
+
 const generateToken = (id, role) => {
   return jwt.sign(
     { id, role }, 
@@ -47,45 +48,10 @@ export const register = async (req, res, next) => {
 
     logger.info('User registered successfully, pending admin approval', { userId: user._id, email: user.email });
 
-    // Send response IMMEDIATELY — don't wait for email
-    res.status(HTTP_STATUS.CREATED).json({
+    return res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: 'Registration successful. Your account is pending admin approval.',
       data: { email: user.email },
-    });
-
-    // Send welcome email in background (non-blocking)
-    sendEmail({
-      email: user.email,
-      subject: 'Welcome to Yash Collections – Registration Received!',
-      html: `
-        <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
-          <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:36px 32px;text-align:center;">
-            <h1 style="color:#1dbbcc;margin:0;font-size:28px;letter-spacing:-0.5px;">Yash Collections</h1>
-            <p style="color:rgba(255,255,255,0.7);margin:6px 0 0;font-size:13px;">B2B Wholesale Portal</p>
-          </div>
-          <div style="padding:32px;">
-            <h2 style="color:#1b2f3e;margin:0 0 16px;">Welcome, ${user.name}! 🎉</h2>
-            <p style="color:#3e6b82;font-size:15px;line-height:1.7;margin:0 0 16px;">Thank you for registering on <strong>Yash Collections</strong>. Your account has been created successfully!</p>
-            <div style="background:rgba(29,187,204,0.08);border:1px solid rgba(29,187,204,0.2);border-radius:12px;padding:20px;margin:20px 0;">
-              <p style="margin:0;color:#1b2f3e;font-size:14px;font-weight:600;">📋 Registration Details</p>
-              <p style="margin:8px 0 0;color:#3e6b82;font-size:14px;">Email: <strong>${user.email}</strong></p>
-            </div>
-            <div style="background:rgba(229,138,62,0.08);border:1px solid rgba(229,138,62,0.2);border-radius:12px;padding:20px;margin:20px 0;">
-              <p style="margin:0;color:#1b2f3e;font-size:14px;font-weight:600;">⏳ Pending Admin Approval</p>
-              <p style="margin:8px 0 0;color:#3e6b82;font-size:14px;line-height:1.6;">Your account is currently under review by our team. You will receive another email as soon as your account has been <strong>approved</strong> and you can start placing orders.</p>
-            </div>
-            <p style="color:#70a0b5;font-size:13px;line-height:1.6;margin:16px 0 0;">If you have any questions, feel free to contact us. We typically review new registrations within 24 hours.</p>
-          </div>
-          <div style="background:#f0f5f8;padding:20px 32px;border-top:1px solid #e5edf2;text-align:center;">
-            <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
-          </div>
-        </div>
-      `,
-    }).then(() => {
-      logger.info('Welcome email sent to new user', { email: user.email });
-    }).catch(emailErr => {
-      logger.error('Failed to send welcome email', { error: emailErr.message });
     });
 
   } catch (error) {
@@ -336,51 +302,62 @@ export const updateUserStatus = async (req, res, next) => {
 
     const isBeingApproved = (isVerified === true && user.isVerified === false);
 
+    console.log('=== APPROVAL DEBUG ===');
+    console.log('isVerified received:', isVerified, typeof isVerified);
+    console.log('user.isVerified before:', user.isVerified);
+    console.log('isBeingApproved:', isBeingApproved);
+    console.log('user.email:', user.email);
+    console.log('EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('EMAIL_PASS set:', !!process.env.EMAIL_PASS);
+    console.log('=====================');
+
     if (isVerified !== undefined) user.isVerified = isVerified;
     if (isActive !== undefined) user.isActive = isActive;
 
     await user.save();
 
-    if (isBeingApproved) {
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: '✅ Account Approved – You can now log in to Yash Collections!',
-          html: `
-            <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
-              <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:36px 32px;text-align:center;">
-                <h1 style="color:#1dbbcc;margin:0;font-size:28px;letter-spacing:-0.5px;">Yash Collections</h1>
-                <p style="color:rgba(255,255,255,0.7);margin:6px 0 0;font-size:13px;">B2B Wholesale Portal</p>
-              </div>
-              <div style="padding:32px;text-align:center;">
-                <div style="width:70px;height:70px;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-                  <span style="font-size:32px;">✅</span>
-                </div>
-                <h2 style="color:#1b2f3e;margin:0 0 12px;">Account Approved!</h2>
-                <p style="color:#3e6b82;font-size:15px;line-height:1.7;margin:0 0 24px;">Hi <strong>${user.name}</strong>, great news! Your account on <strong>Yash Collections</strong> has been reviewed and approved by our team.</p>
-                <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px;margin:0 0 24px;text-align:left;">
-                  <p style="margin:0;color:#1b2f3e;font-size:14px;font-weight:600;">🎊 You can now:</p>
-                  <ul style="margin:10px 0 0;padding-left:20px;color:#3e6b82;font-size:14px;line-height:2;">
-                    <li>Browse our exclusive B2B catalog</li>
-                    <li>Place wholesale orders</li>
-                    <li>Manage your account & addresses</li>
-                  </ul>
-                </div>
-              </div>
-              <div style="background:#f0f5f8;padding:20px 32px;border-top:1px solid #e5edf2;text-align:center;">
-                <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
-              </div>
-            </div>
-          `,
-        });
-      } catch (err) {
-        logger.error('Failed to send approval email', { userId: user._id, error: err.message });
-      }
-    }
-
     logger.info('User status updated', { userId: user._id, isVerified: user.isVerified, isActive: user.isActive });
     
-    return sendSuccess(res, 'User status updated successfully', { user });
+    // Send response IMMEDIATELY
+    res.status(200).json({ success: true, message: 'User status updated successfully', data: { user } });
+
+    // Send approval email in background (non-blocking)
+    if (isBeingApproved) {
+      sendEmail({
+        email: user.email,
+        subject: '✅ Account Approved – You can now log in to Yash Collections!',
+        html: `
+          <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:36px 32px;text-align:center;">
+              <h1 style="color:#1dbbcc;margin:0;font-size:28px;letter-spacing:-0.5px;">Yash Collections</h1>
+              <p style="color:rgba(255,255,255,0.7);margin:6px 0 0;font-size:13px;">B2B Wholesale Portal</p>
+            </div>
+            <div style="padding:32px;text-align:center;">
+              <div style="width:70px;height:70px;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <span style="font-size:32px;">✅</span>
+              </div>
+              <h2 style="color:#1b2f3e;margin:0 0 12px;">Account Approved!</h2>
+              <p style="color:#3e6b82;font-size:15px;line-height:1.7;margin:0 0 24px;">Hi <strong>${user.name}</strong>, great news! Your account on <strong>Yash Collections</strong> has been reviewed and approved by our team.</p>
+              <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px;margin:0 0 24px;text-align:left;">
+                <p style="margin:0;color:#1b2f3e;font-size:14px;font-weight:600;">🎊 You can now:</p>
+                <ul style="margin:10px 0 0;padding-left:20px;color:#3e6b82;font-size:14px;line-height:2;">
+                  <li>Browse our exclusive B2B catalog</li>
+                  <li>Place wholesale orders</li>
+                  <li>Manage your account & addresses</li>
+                </ul>
+              </div>
+            </div>
+            <div style="background:#f0f5f8;padding:20px 32px;border-top:1px solid #e5edf2;text-align:center;">
+              <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      }).then(() => {
+        logger.info('Approval email sent', { email: user.email });
+      }).catch(err => {
+        logger.error('Failed to send approval email', { error: err.message });
+      });
+    }
   } catch (error) {
     logger.error('Update user status error', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
@@ -542,6 +519,9 @@ export const forgotPasswordOtp = async (req, res, next) => {
     await adminUser.save({ validateBeforeSave: false });
 
     try {
+      console.log('[forgotPasswordOtp] Attempting to send OTP to:', adminEmail);
+      console.log('[forgotPasswordOtp] OTP:', otp);
+      
       await sendEmail({
         email: adminEmail,
         subject: 'Admin Password Reset OTP - Yash Collections',
@@ -566,9 +546,11 @@ export const forgotPasswordOtp = async (req, res, next) => {
           </div>
         `,
       });
-      logger.info('Password reset OTP sent', { email: adminEmail });
-      return sendSuccess(res, 'If this email is registered, an OTP has been sent.', {});
+      console.log('[forgotPasswordOtp] ✅ OTP email sent successfully!');
+      logger.info('Password reset OTP sent', { email: adminEmail, otp });
+      return sendSuccess(res, 'OTP has been sent to your email. Valid for 15 minutes.', { email: adminEmail });
     } catch (emailErr) {
+      console.error('[forgotPasswordOtp] ❌ Email send failed:', emailErr.message);
       adminUser.otp = undefined;
       adminUser.otpExpire = undefined;
       await adminUser.save({ validateBeforeSave: false });
@@ -695,5 +677,69 @@ export const deleteUser = async (req, res, next) => {
   } catch (error) {
     logger.error('Delete user error', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
+  }
+};
+
+/**
+ * Test Email Configuration (Dev Only)
+ * POST /api/auth/test-email
+ * Body: { "testEmail": "test@example.com" }
+ */
+export const testEmail = async (req, res, next) => {
+  try {
+    const { testEmail } = req.body;
+    
+    if (!testEmail) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, 'testEmail is required');
+    }
+
+    console.log('\n====== EMAIL CONFIG TEST ======');
+    console.log('EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('EMAIL_PASS set:', !!process.env.EMAIL_PASS);
+    console.log('EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
+    console.log('TEST_EMAIL:', testEmail);
+    console.log('===============================\n');
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Email credentials not configured in .env');
+    }
+
+    try {
+      await sendEmail({
+        email: testEmail,
+        subject: '🧪 Test Email - Yash Collections',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background: #f5f5f5; border-radius: 10px;">
+            <h2 style="color: #1b2f3e; text-align: center;">✅ Email System Working!</h2>
+            <p style="color: #333; font-size: 16px; line-height: 1.6;">
+              This is a test email to verify that your email configuration is working correctly.
+            </p>
+            <div style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 0; color: #0d6b82;"><strong>Test Details:</strong></p>
+              <p style="margin: 5px 0; color: #0d6b82;">Sent at: ${new Date().toISOString()}</p>
+              <p style="margin: 5px 0; color: #0d6b82;">From: ${process.env.EMAIL_USER}</p>
+              <p style="margin: 5px 0; color: #0d6b82;">To: ${testEmail}</p>
+            </div>
+            <p style="color: #666; font-size: 12px; text-align: center; margin-top: 30px;">
+              If you received this email, your email configuration is working correctly!
+            </p>
+          </div>
+        `,
+      });
+
+      console.log('✅ Test email sent successfully!');
+      return sendSuccess(res, 'Test email sent successfully! Check your inbox.', {
+        sentTo: testEmail,
+        from: process.env.EMAIL_USER,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (emailError) {
+      console.error('❌ Email sending failed:', emailError.message);
+      console.error('Error details:', emailError);
+      return sendError(res, HTTP_STATUS.INTERNAL_ERROR, `Email failed: ${emailError.message}`);
+    }
+  } catch (error) {
+    logger.error('Test email error', { error: error.message });
+    return sendError(res, HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR);
   }
 };

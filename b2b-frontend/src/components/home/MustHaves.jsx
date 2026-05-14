@@ -17,7 +17,7 @@ const MustHaves = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const displayedCollections = showAll ? collections : collections.slice(0, 8);
+  const displayedCollections = showAll ? collections : collections.slice(0, 10);
 
   return (
     <section className="py-14 md:py-20">
@@ -40,9 +40,9 @@ const MustHaves = () => {
                 <div 
                   key={item._id || i} 
                   onClick={() => navigate(`/shop?category=${encodeURIComponent(item.name)}`)}
-                  className="flex flex-col group cursor-pointer rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-white border border-brand-100"
+                  className="group relative cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gray-50 border border-gray-100"
                 >
-                  <div className="aspect-square overflow-hidden bg-brand-50">
+                  <div className="aspect-[4/5] overflow-hidden">
                     <img
                       src={item.image}
                       alt={item.name}
@@ -50,15 +50,20 @@ const MustHaves = () => {
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   </div>
-                  <div className="bg-brand-900 text-white text-center py-2 px-2 text-xs sm:text-sm font-bold tracking-wide uppercase min-h-[36px] flex items-center justify-center">
-                    {item.name}
+                  {/* Elegant Dark Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1b2f3e]/90 via-[#1b2f3e]/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <div className="absolute bottom-0 left-0 w-full p-4 sm:p-5 flex items-end justify-center">
+                    <h3 className="text-white text-center text-xs sm:text-sm font-bold tracking-widest uppercase drop-shadow-md translate-y-1 group-hover:translate-y-0 transition-transform duration-500">
+                      {item.name}
+                    </h3>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* View More Button */}
-            {collections.length > 8 && (
+            {collections.length > 10 && (
               <div className="text-center mt-12">
                 <Link
                   to="/collections"

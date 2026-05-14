@@ -2,12 +2,13 @@ import nodemailer from 'nodemailer';
 import { logger } from './logger.js';
 
 /**
- * Send email via Resend HTTP API (works on Render free tier where SMTP is blocked)
+ * Send email via Resend HTTP API (works on Render free tier)
+ * Domain verified: yashcollection.app
  */
 const sendViaResend = async (options, emailUser) => {
   const resendApiKey = process.env.RESEND_API_KEY;
   
-  console.log('[sendEmail] Using Resend HTTP API...');
+  console.log('[sendEmail] Using Resend HTTP API (verified domain)...');
   
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -16,7 +17,7 @@ const sendViaResend = async (options, emailUser) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: `Yash Collections B2B <onboarding@resend.dev>`,
+      from: 'Yash Collections B2B <noreply@yashcollection.app>',
       to: [options.email],
       subject: options.subject,
       html: options.html,
@@ -36,7 +37,7 @@ const sendViaResend = async (options, emailUser) => {
 };
 
 /**
- * Send email via SMTP (Gmail) - works locally but NOT on Render free tier
+ * Send email via SMTP (Gmail) - fallback for local development
  */
 const sendViaSMTP = async (options, emailUser, emailPass) => {
   console.log('[sendEmail] Using SMTP (Gmail)...');
@@ -85,16 +86,15 @@ const sendEmail = async (options) => {
     console.log('[sendEmail] Starting email send...');
     console.log('[sendEmail] To:', options.email);
     console.log('[sendEmail] Subject:', options.subject);
-    console.log('[sendEmail] From:', emailUser);
     console.log('[sendEmail] Resend API Key set:', !!resendApiKey && resendApiKey !== 're_your_api_key_here');
     console.log('[sendEmail] SMTP credentials set:', !!emailUser && !!emailPass);
 
-    // Use Resend if API key is configured (production / Render)
+    // Priority 1: Resend (production - works on Render, domain verified)
     if (resendApiKey && resendApiKey !== 're_your_api_key_here') {
       return await sendViaResend(options, emailUser);
     }
 
-    // Fallback to SMTP (local development)
+    // Priority 2: SMTP (local development only)
     if (emailUser && emailPass) {
       return await sendViaSMTP(options, emailUser, emailPass);
     }

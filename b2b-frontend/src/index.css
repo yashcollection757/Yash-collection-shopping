@@ -13,7 +13,7 @@
 
   /* ===== Accent Colors ===== */
   --color-accent-cyan:   #1dbbcc;
-  --color-accent-orange: #f2823a;
+  --color-accent-orange: #1dbbcc;
 }
 
 @layer base {

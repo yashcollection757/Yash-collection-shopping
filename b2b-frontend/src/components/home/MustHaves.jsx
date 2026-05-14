@@ -40,7 +40,7 @@ const MustHaves = () => {
                 <div 
                   key={item._id || i} 
                   onClick={() => navigate(`/shop?category=${encodeURIComponent(item.name)}`)}
-                  className="group relative cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gray-50 border border-gray-100"
+                  className={`group relative cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-gray-50 border border-gray-100 ${!showAll && i >= 8 ? 'hidden lg:block' : ''}`}
                 >
                   <div className="aspect-[4/5] overflow-hidden">
                     <img

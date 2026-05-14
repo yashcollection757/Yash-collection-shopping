@@ -117,7 +117,7 @@ const PopularProducts = () => {
                   <div className="p-3 sm:p-4">
                     <p className="text-xs sm:text-sm font-bold text-brand-900 mb-1 line-clamp-1">{item.name}</p>
                     {minPrice != null && (
-                      <p className="text-accent-orange font-black text-sm sm:text-base">
+                      <p className="text-brand-900 font-black text-sm sm:text-base">
                         ₹{minPrice.toLocaleString('en-IN')}
                       </p>
                     )}

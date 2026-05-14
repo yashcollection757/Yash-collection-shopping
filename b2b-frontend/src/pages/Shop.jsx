@@ -213,11 +213,11 @@ const Shop = () => {
         <div className="flex gap-6 lg:gap-8">
 
           {/* ── Sidebar ── */}
-          <aside className={`${sidebarOpen ? 'block' : 'hidden'} md:block fixed md:relative inset-0 md:inset-auto z-40 md:z-0 w-full md:w-64 flex-shrink-0 bg-white md:border-r md:border-gray-100`}>
+          <aside className={`${sidebarOpen ? 'block' : 'hidden'} md:block fixed md:relative inset-0 md:inset-auto z-50 md:z-0 w-full md:w-64 flex-shrink-0 bg-white md:border-r md:border-gray-100`}>
             {/* Mobile Overlay */}
             <div
               onClick={() => setSidebarOpen(false)}
-              className={`${sidebarOpen ? 'fixed' : 'hidden'} inset-0 bg-black/50 z-30 md:hidden`}
+              className={`${sidebarOpen ? 'fixed' : 'hidden'} inset-0 bg-black/50 z-40 md:hidden`}
             />
             {/* Mobile Header */}
             <div className="md:hidden flex justify-between items-center p-4 border-b bg-white sticky top-0 z-50 border-gray-100">
@@ -228,7 +228,7 @@ const Shop = () => {
                 </svg>
               </button>
             </div>
-            <div className="overflow-y-auto max-h-[calc(100vh-140px)] md:max-h-none p-5 md:p-4 bg-white md:bg-gray-50/50">
+            <div className="overflow-y-auto max-h-[calc(100vh-140px)] md:max-h-none p-5 md:p-4 bg-white md:bg-gray-50/50 relative z-50">
 
             {/* Active Filters */}
             {hasActiveFilters && (
@@ -406,7 +406,7 @@ const Shop = () => {
                           onError={e => { e.target.src = '/images/pro1.jpeg'; }}
                         />
                         {onSale && (
-                          <div className="absolute top-4 right-4 bg-gradient-to-r from-orange-500 via-orange-450 to-red-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                          <div className="absolute top-4 right-4 bg-brand-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-pulse">
                             SALE
                           </div>
                         )}
@@ -414,8 +414,8 @@ const Shop = () => {
 
                       {/* Info */}
                       <div className="p-5 bg-gradient-to-b from-white to-gray-50/30">
-                        <p className="text-xs font-bold uppercase tracking-widest mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500">{product.category}</p>
-                        <h3 className="text-sm font-black text-gray-900 mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 transition-all">{product.name}</h3>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500 truncate">{product.category}</p>
+                        <h3 className="text-xs sm:text-sm font-black text-gray-900 mb-3 leading-snug break-words group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-600 transition-all">{product.name}</h3>
                         <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                           <span className="text-lg font-black bg-gradient-to-r from-cyan-500 to-cyan-600 text-transparent bg-clip-text">
                             ₹{minPrice.toLocaleString('en-IN')}

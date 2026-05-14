@@ -20,10 +20,10 @@ const Hero = () => {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-8">
               <Link to="/shop">
                 <button 
-                  className="text-white font-bold text-sm tracking-wider uppercase px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-[0_8px_20px_rgba(242,130,58,0.3)] transition-all hover:-translate-y-0.5"
-                  style={{ background: '#f2823a' }}
-                  onMouseOver={e => e.currentTarget.style.background = '#d97706'}
-                  onMouseOut={e => e.currentTarget.style.background = '#f2823a'}
+                  className="text-white font-bold text-sm tracking-wider uppercase px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-[0_8px_20px_rgba(27,47,62,0.3)] transition-all hover:-translate-y-0.5"
+                  style={{ background: '#1b2f3e' }}
+                  onMouseOver={e => e.currentTarget.style.background = '#1dbbcc'}
+                  onMouseOut={e => e.currentTarget.style.background = '#1b2f3e'}
                 >
                   Shop Now
                 </button>

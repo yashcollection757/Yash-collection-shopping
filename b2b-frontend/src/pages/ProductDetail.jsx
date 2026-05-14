@@ -292,62 +292,99 @@ const ProductDetail = () => {
             </div>
 
             {/* Variants table */}
-            <div className="mb-8 overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b-2 border-gray-200 bg-gray-50">
-                    <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">SIZE</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">QUANTITY</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">PRICE</th>
-                    <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {product.variants?.map((v, idx) => {
-                    const qty      = quantities[v._id] || 0;
-                    const rowTotal = qty * v.price;
-                    const inStock  = v.quantity > 0;
-                    return (
-                      <tr key={v._id} className={`border-b border-gray-100 transition-colors ${inStock ? 'hover:bg-blue-50' : 'opacity-50 bg-gray-50'}`}>
-                        <td className="py-4 px-6">
+            <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden sm:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200 bg-gray-50">
+                      <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">SIZE</th>
+                      <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">QUANTITY</th>
+                      <th className="text-left py-4 px-6 font-bold text-gray-900 uppercase tracking-wide">PRICE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.variants?.map((v, idx) => {
+                      const qty = quantities[v._id] || 0;
+                      const inStock = v.quantity > 0;
+                      return (
+                        <tr key={v._id} className={`border-b border-gray-100 transition-colors ${inStock ? 'hover:bg-blue-50' : 'opacity-50 bg-gray-50'}`}>
+                          <td className="py-4 px-6">
+                            <button onClick={() => { setSelectedVariant(idx); setQuantities({}); }}
+                              className={`px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all ${
+                                selectedVariant === idx
+                                  ? 'border-brand-900 bg-brand-900 text-white shadow-md'
+                                  : 'border-gray-300 text-gray-900 hover:border-brand-900 bg-white'
+                              }`}>
+                              {v.size}
+                            </button>
+                            {inStock ? <span className="ml-2 text-xs text-green-600 font-semibold">{v.quantity} in stock</span> : <span className="ml-2 text-xs text-red-500 font-semibold">Out of Stock</span>}
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-2 border border-gray-300 rounded-lg w-fit">
+                              <button onClick={() => handleQuantityChange(v._id, Math.max(0, qty - 6), v.quantity)} disabled={!inStock || qty <= 0}
+                                className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">−</button>
+                              <input type="number" value={qty} step="1" min="0" max={v.quantity}
+                                onChange={e => {
+                                  let val = parseInt(e.target.value) || 0;
+                                  if (val > v.quantity) val = v.quantity;
+                                  handleQuantityChange(v._id, val, v.quantity);
+                                }}
+                                disabled={!inStock}
+                                className="w-12 text-center py-2 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed font-bold" />
+                              <button onClick={() => handleQuantityChange(v._id, Math.min(v.quantity, qty + 6), v.quantity)} disabled={!inStock || qty >= v.quantity}
+                                className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">+</button>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6"><span className="font-bold text-gray-900">₹{v.price.toLocaleString('en-IN')}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {/* Mobile Cards */}
+              <div className="sm:hidden divide-y divide-gray-100">
+                {product.variants?.map((v, idx) => {
+                  const qty = quantities[v._id] || 0;
+                  const inStock = v.quantity > 0;
+                  return (
+                    <div key={v._id} className={`p-4 ${inStock ? '' : 'opacity-50 bg-gray-50'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
                           <button onClick={() => { setSelectedVariant(idx); setQuantities({}); }}
                             className={`px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all ${
                               selectedVariant === idx
                                 ? 'border-brand-900 bg-brand-900 text-white shadow-md'
-                                : 'border-gray-300 text-gray-900 hover:border-brand-900 bg-white'
+                                : 'border-gray-300 text-gray-900 bg-white'
                             }`}>
                             {v.size}
                           </button>
-                          {inStock ? <span className="ml-2 text-xs text-green-600 font-semibold">{v.quantity} in stock</span> : <span className="ml-2 text-xs text-red-500 font-semibold">Out of Stock</span>}
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-2 border border-gray-300 rounded-lg w-fit">
-                            <button onClick={() => handleQuantityChange(v._id, Math.max(0, qty - 6), v.quantity)} disabled={!inStock || qty <= 0}
-                              className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">−</button>
-                            <input type="number" value={qty} step="1" min="0" max={v.quantity}
-                              onChange={e => {
-                                let val = parseInt(e.target.value) || 0;
-                                if (val > v.quantity) val = v.quantity;
-                                handleQuantityChange(v._id, val, v.quantity);
-                              }}
-                              disabled={!inStock}
-                              className="w-12 text-center py-2 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed font-bold" />
-                            <button onClick={() => handleQuantityChange(v._id, Math.min(v.quantity, qty + 6), v.quantity)} disabled={!inStock || qty >= v.quantity}
-                              className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">+</button>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6"><span className="font-bold text-gray-900">₹{v.price.toLocaleString('en-IN')}</span></td>
-                        <td className="py-4 px-6">
-                          {qty > 0
-                            ? <span className="font-black text-brand-900">₹{rowTotal.toLocaleString('en-IN')}</span>
-                            : <span className="text-gray-400 font-medium">—</span>
+                          {inStock
+                            ? <span className="text-xs text-green-600 font-semibold">{v.quantity} in stock</span>
+                            : <span className="text-xs text-red-500 font-semibold">Out of Stock</span>
                           }
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                        <span className="font-bold text-gray-900 text-base">₹{v.price.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 border border-gray-300 rounded-lg w-fit">
+                        <button onClick={() => handleQuantityChange(v._id, Math.max(0, qty - 6), v.quantity)} disabled={!inStock || qty <= 0}
+                          className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">−</button>
+                        <input type="number" value={qty} step="1" min="0" max={v.quantity}
+                          onChange={e => {
+                            let val = parseInt(e.target.value) || 0;
+                            if (val > v.quantity) val = v.quantity;
+                            handleQuantityChange(v._id, val, v.quantity);
+                          }}
+                          disabled={!inStock}
+                          className="w-14 text-center py-2 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed font-bold text-base" />
+                        <button onClick={() => handleQuantityChange(v._id, Math.min(v.quantity, qty + 6), v.quantity)} disabled={!inStock || qty >= v.quantity}
+                          className="px-3 py-2 text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed font-bold">+</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Add to Cart */}
@@ -375,7 +412,7 @@ const ProductDetail = () => {
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-1 font-bold">SHIPPING</p>
-                <p className="font-semibold text-gray-900">Free above ₹5,000</p>
+                <p className="font-semibold text-gray-900">Approved by Admin</p>
               </div>
             </div>
           </div>

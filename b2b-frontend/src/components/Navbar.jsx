@@ -50,13 +50,13 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 shrink-0 group">
-          <div className="w-10 h-10 rounded-xl bg-brand-900 flex items-center justify-center shadow-md group-hover:bg-brand-600 transition-colors duration-300">
-            <span className="text-white font-black text-xl leading-none">Y</span>
+        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-900 flex items-center justify-center shadow-md group-hover:bg-accent-cyan transition-colors duration-300">
+            <span className="text-white font-black text-lg sm:text-xl leading-none">Y</span>
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-xl font-black text-brand-900 tracking-tight">Yash</span>
-            <span className="text-[9px] font-bold tracking-[0.3em] text-brand-300 uppercase mt-0.5">Collection</span>
+            <span className="text-lg sm:text-xl font-black text-brand-900 tracking-tight">Yash</span>
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.25em] text-brand-600 uppercase mt-0.5">Collection</span>
           </div>
         </Link>
 
@@ -116,7 +116,7 @@ const Navbar = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <span className="hidden sm:inline">Cart</span>
-            <span className="absolute -top-1.5 -right-1.5 bg-accent-orange text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{cartCount}</span>
+            <span className="absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{cartCount}</span>
           </Link>
 
           {/* Hamburger — mobile only */}

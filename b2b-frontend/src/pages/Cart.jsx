@@ -127,45 +127,63 @@ const Cart = () => {
           {/* Cart Items */}
           <div className="flex-1 space-y-4">
             {cartItems.map(item => (
-              <div key={item.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-5 items-start sm:items-center">
-                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl border border-gray-100 shrink-0" />
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900 truncate">{item.name}</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">Size: {item.size}</p>
-                  <p className="text-sm font-bold text-brand-900 mt-1">₹{item.price.toLocaleString('en-IN')}</p>
+              <div key={item.id} className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center">
+                
+                {/* Top Section: Image & Details */}
+                <div className="flex gap-4 w-full sm:w-auto flex-1">
+                  <img src={item.image} alt={item.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-100 shrink-0" />
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-gray-900 line-clamp-1 sm:truncate text-sm sm:text-base">{item.name}</h3>
+                        <p className="text-xs text-gray-500 mt-1 font-medium bg-gray-100 w-fit px-2 py-0.5 rounded-md">Size: {item.size}</p>
+                      </div>
+                      <button onClick={() => handleRemoveItem(item.id)} className="sm:hidden text-gray-400 hover:text-red-500 p-1">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                    <p className="text-sm font-black text-brand-900 mt-2">₹{item.price.toLocaleString('en-IN')}</p>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 border border-gray-200 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => handleQuantityChange(item.id, item.quantity - 6)}
-                    disabled={item.quantity <= 0}
-                    className="px-3 py-2 text-gray-600 hover:text-gray-900 font-bold hover:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
-                  >−</button>
-                  <input 
-                    type="number" 
-                    value={item.quantity} 
-                    min="0" 
-                    max={item.maxStock || 999}
-                    onChange={e => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                    className="w-12 text-center py-2 focus:outline-none font-bold text-sm border-x border-gray-200"
-                  />
-                  <button
-                    onClick={() => handleQuantityChange(item.id, item.quantity + 6)}
-                    disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
-                    className="px-3 py-2 text-gray-600 hover:text-gray-900 font-bold hover:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
-                  >+</button>
-                </div>
-                {item.maxStock !== undefined && (
-                  <span className="text-xs text-gray-400 mt-1 block">Max: {item.maxStock}</span>
-                )}
+                {/* Bottom Section: Quantity & Total */}
+                <div className="flex items-center justify-between w-full sm:w-auto gap-4 pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-100 mt-2 sm:mt-0">
+                  <div className="flex flex-col">
+                    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50 shadow-sm w-fit">
+                      <button
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 6)}
+                        disabled={item.quantity <= 0}
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-brand-900 font-bold hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >−</button>
+                      <input 
+                        type="number" 
+                        value={item.quantity} 
+                        min="0" 
+                        max={item.maxStock || 999}
+                        onChange={e => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                        className="w-12 sm:w-14 text-center py-1.5 sm:py-2 focus:outline-none font-bold text-sm bg-white border-x border-gray-200"
+                      />
+                      <button
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 6)}
+                        disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-brand-900 font-bold hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >+</button>
+                    </div>
+                    {item.maxStock !== undefined && (
+                      <span className="text-[10px] text-gray-400 mt-1 pl-1 font-medium">Max available: {item.maxStock}</span>
+                    )}
+                  </div>
 
-                <div className="text-right shrink-0">
-                  <p className="font-black text-gray-900">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
-                  <button onClick={() => handleRemoveItem(item.id)} className="text-red-500 text-xs font-semibold hover:text-red-700 mt-1">
-                    Remove
-                  </button>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-gray-400 font-medium mb-0.5 sm:hidden">Total</p>
+                    <p className="font-black text-gray-900 text-base sm:text-lg">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                    <button onClick={() => handleRemoveItem(item.id)} className="hidden sm:inline-block text-red-500 text-xs font-semibold hover:text-red-700 mt-1 transition-colors">
+                      Remove
+                    </button>
+                  </div>
                 </div>
+
               </div>
             ))}
 
@@ -231,9 +249,7 @@ const Cart = () => {
                 {!moqMet ? `ADD ${MIN_ORDER_QTY - totalItems} MORE TO CHECKOUT` : 'PROCEED TO CHECKOUT'}
               </button>
 
-              <div className="text-center text-xs text-gray-400 mt-4">
-                🔒 Secure & encrypted checkout
-              </div>
+
             </div>
           </div>
         </div>

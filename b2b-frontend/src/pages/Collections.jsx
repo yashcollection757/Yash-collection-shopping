@@ -102,7 +102,7 @@ const Collections = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
 
                 {/* Category Label */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-gray-900 font-bold px-6 py-2 rounded-full shadow-lg text-sm tracking-wide whitespace-nowrap">
+                <div className="absolute bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 bg-white text-gray-900 font-bold px-4 sm:px-6 py-2 rounded-full shadow-lg text-xs sm:text-sm tracking-wide text-center whitespace-normal sm:whitespace-nowrap">
                   {category.name}
                 </div>
               </Link>

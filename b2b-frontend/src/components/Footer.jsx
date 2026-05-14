@@ -8,21 +8,21 @@ const Footer = () => {
     <footer className="w-full">
       {/* Main Footer */}
       <div className="bg-gray-900 text-gray-100">
-        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 mb-8">
+        <div className="container mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-8">
 
-            {/* Brand */}
-            <div className="sm:col-span-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center flex-shrink-0">
+            {/* Brand — full width on mobile */}
+            <div className="col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-accent-cyan flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-black text-lg">Y</span>
                 </div>
                 <div>
                   <p className="font-black text-white text-lg leading-none">Yash</p>
-                  <p className="text-xs tracking-widest text-gray-400 font-bold uppercase">Collection</p>
+                  <p className="text-[9px] tracking-[0.25em] text-gray-400 font-bold uppercase mt-0.5">Collection</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-400 leading-relaxed mb-4">
+              <p className="text-sm text-gray-400 leading-relaxed mb-4 max-w-xs">
                 Premium kids wear collection with authentic quality and affordable prices for B2B businesses.
               </p>
               <div className="space-y-2 text-sm">
@@ -34,7 +34,7 @@ const Footer = () => {
 
             {/* Company Links */}
             <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-cyan-500 pl-3">Company</h4>
+              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-accent-cyan pl-3">Company</h4>
               <ul className="space-y-2.5 text-sm">
                 {[
                   { label: 'Home', path: '/' },
@@ -53,7 +53,7 @@ const Footer = () => {
 
             {/* Support Links */}
             <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-cyan-500 pl-3">Support</h4>
+              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-accent-cyan pl-3">Support</h4>
               <ul className="space-y-2.5 text-sm">
                 {[
                   { label: 'Contact Us', path: '/contact' },
@@ -67,9 +67,9 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Social & Hours */}
-            <div>
-              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-cyan-500 pl-3">Connect</h4>
+            {/* Social & Hours — full width on smallest, normal on sm+ */}
+            <div className="col-span-2 sm:col-span-1">
+              <h4 className="font-bold text-white mb-4 uppercase tracking-widest text-xs border-l-2 border-accent-cyan pl-3">Connect</h4>
               <div className="space-y-4">
                 {/* Social Links */}
                 <div className="flex gap-3">
@@ -99,7 +99,7 @@ const Footer = () => {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8">
+          <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8 text-center sm:text-left">
             <p className="text-sm text-gray-400">© {currentYear} Yash Collection. All Rights Reserved.</p>
           </div>
         </div>

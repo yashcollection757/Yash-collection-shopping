@@ -2,11 +2,12 @@ import jwt from 'jsonwebtoken';
 import { sendError } from '../utils/apiResponse.js';
 import { HTTP_STATUS, ERROR_MESSAGES, USER_ROLES } from '../constants/appConstants.js';
 import { logger } from '../utils/logger.js';
+import User from '../models/User.js';
 
 /**
  * Middleware to protect routes - requires valid JWT token
  */
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     
@@ -23,7 +24,19 @@ export const protect = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    
+    // Check if user still exists in database
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return sendError(res, HTTP_STATUS.UNAUTHORIZED, 'User no longer exists. Please log in again.');
+    }
+    
+    // Check if user is suspended/inactive
+    if (currentUser.isActive === false) {
+      return sendError(res, HTTP_STATUS.FORBIDDEN, 'Your account has been suspended by the admin.');
+    }
+
+    req.user = currentUser;
     next();
   } catch (error) {
     logger.error('Token verification failed', { error: error.message });

@@ -19,7 +19,17 @@ const apiCall = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401 || (data.message && (data.message.includes('User no longer exists') || data.message.includes('suspended')))) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('savedAddresses');
+    localStorage.removeItem('myOrders');
+    localStorage.removeItem('cart');
+    window.location.href = '/login';
+    throw new Error(data.message || 'Session expired. Please login again.');
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'API Error');

@@ -23,6 +23,7 @@ const sendEmail = async (options) => {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
+      family: 4, // Force IPv4 to fix Render ENETUNREACH error with IPv6
       auth: {
         user: emailUser,
         pass: emailPass,

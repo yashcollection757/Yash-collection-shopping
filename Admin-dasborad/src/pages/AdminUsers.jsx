@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import { fetchAllUsers, deleteUserAdmin } from '../services/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const badgeStyle = (isVerified) => {
-  if (isVerified) return { background: 'rgba(29,187,204,0.12)', color: '#1dbbcc' };
-  return { background: 'rgba(229,138,62,0.12)', color: '#e58a3e' };
-};
 
 export default function AdminUsers() {
   const [users, setUsers]   = useState([]);
@@ -19,27 +15,11 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res  = await fetch(`${API_BASE_URL}/auth/users`);
-      const data = await res.json();
-      setUsers(data.data?.users || []);
+      const data = await fetchAllUsers();
+      setUsers(data || []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleApproval = async (id, currentStatus) => {
-    try {
-      setLoading(true);
-      await fetch(`${API_BASE_URL}/auth/users/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isVerified: !currentStatus })
-      });
-      await loadUsers();
-    } catch (err) {
-      console.error('Failed to update status', err);
       setLoading(false);
     }
   };
@@ -48,10 +28,11 @@ export default function AdminUsers() {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
       setLoading(true);
-      await fetch(`${API_BASE_URL}/auth/users/${id}`, { method: 'DELETE' });
+      await deleteUserAdmin(id);
       await loadUsers();
     } catch (err) {
       console.error('Failed to delete user', err);
+      alert('Failed to delete user');
       setLoading(false);
     }
   };
@@ -109,7 +90,6 @@ export default function AdminUsers() {
               </thead>
               <tbody>
                 {filtered.map((u, i) => {
-                  const s = badgeStyle(u.isVerified);
                   const joinDate = new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                   return (
                     <tr key={u._id} className="border-t hover:bg-slate-50 transition-colors" style={{ borderColor: '#f0f5f8' }}>
@@ -127,46 +107,19 @@ export default function AdminUsers() {
                       <td className="px-5 py-4 text-xs" style={{ color: '#3e6b82' }}>{u.phone || '—'}</td>
                       <td className="px-5 py-4 text-xs whitespace-nowrap" style={{ color: '#70a0b5' }}>{joinDate}</td>
                       <td className="px-5 py-4">
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={s}>
-                          {u.isVerified ? 'Approved' : 'Pending Approval'}
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" 
+                          style={{ background: u.isVerified ? 'rgba(29,187,204,0.12)' : 'rgba(229,138,62,0.12)', color: u.isVerified ? '#1dbbcc' : '#e58a3e' }}>
+                          {u.isVerified ? 'Approved' : 'Pending'}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          {!u.isVerified ? (
-                            <>
-                              <button 
-                                onClick={() => toggleApproval(u._id, u.isVerified)}
-                                className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-cyan-600"
-                                style={{ color: 'white', background: '#1dbbcc', borderColor: '#1dbbcc' }}
-                              >
-                                Accept
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(u._id)}
-                                className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-orange-50"
-                                style={{ color: '#e58a3e', borderColor: '#e58a3e', background: 'transparent' }}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          ) : (
-                            <button 
-                              onClick={() => toggleApproval(u._id, u.isVerified)}
-                              className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-orange-50"
-                              style={{ color: '#e58a3e', borderColor: '#e58a3e', background: 'transparent' }}
-                            >
-                              Suspend
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleDelete(u._id)}
-                            className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-red-50"
-                            style={{ color: '#e53e3e', borderColor: '#e53e3e', background: 'transparent' }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        <button 
+                          onClick={() => handleDelete(u._id)}
+                          className="px-4 py-2 text-[11px] font-bold rounded-lg border transition-all hover:bg-red-50"
+                          style={{ color: '#e53e3e', borderColor: '#e53e3e', background: 'transparent' }}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   );

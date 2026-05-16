@@ -16,7 +16,12 @@ export default function AdminBanners() {
 
   const fetchBanners = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/banners`);
+      const token = localStorage.getItem('authToken') || '';
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE_URL}/banners`, {
+        headers: { 'Authorization': authHeader }
+      });
       const data = await res.json();
       if (data.data?.banner) {
         setBanners({
@@ -55,9 +60,15 @@ export default function AdminBanners() {
   const handleSave = async () => {
     try {
       setSaving(true);
+      const token = localStorage.getItem('authToken') || '';
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
       await fetch(`${API_BASE_URL}/banners`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': authHeader
+        },
         body: JSON.stringify(banners),
       });
       alert('Banners saved successfully!');

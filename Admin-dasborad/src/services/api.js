@@ -11,16 +11,38 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
+export const fetchAllUsers = async () => {
+  const response = await fetch(`${API_BASE_URL}/auth/users`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to fetch users');
+  const data = await response.json();
+  return data.data?.users || [];
+};
+
+export const deleteUserAdmin = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/auth/users/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to delete user');
+  return response.json();
+};
+
 /* ─── Products ─── */
 export const fetchAllProducts = async () => {
-  const response = await fetch(`${API_BASE_URL}/products`);
+  const response = await fetch(`${API_BASE_URL}/products`, {
+    headers: authHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to fetch products');
   const data = await response.json();
   return data.data?.products || [];
 };
 
 export const fetchProductById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`);
+  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    headers: authHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to fetch product');
   const data = await response.json();
   return data.data?.product;
@@ -129,7 +151,9 @@ export const deleteCollection = async (id) => {
 
 /* ─── Orders ─── */
 export const fetchAllOrders = async () => {
-  const response = await fetch(`${API_BASE_URL}/orders`);
+  const response = await fetch(`${API_BASE_URL}/orders`, {
+    headers: authHeaders(),
+  });
   if (!response.ok) throw new Error('Failed to fetch orders');
   const data = await response.json();
   return data.data?.orders || [];
@@ -138,7 +162,7 @@ export const fetchAllOrders = async () => {
 export const updateOrderStatusAdmin = async (id, status) => {
   const response = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify({ orderStatus: status }),
   });
   if (!response.ok) {

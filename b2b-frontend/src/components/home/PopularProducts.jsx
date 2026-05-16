@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { productAPI } from '../../services/api';
 
 const tabs = ['Featured', 'Latest', 'Popular'];
 
@@ -16,8 +15,7 @@ const PopularProducts = () => {
       try {
         setLoading(true);
         // Fetch a larger set so we can sort/slice meaningfully
-        const res  = await fetch(`${API_URL}/products?limit=20`);
-        const data = await res.json();
+        const data = await productAPI.getAllProducts({ limit: 20 });
         let list = data.data?.products || [];
 
         if (activeTab === 0) {

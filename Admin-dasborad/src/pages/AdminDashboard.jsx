@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { fetchAllUsers, fetchAllOrders, fetchAllProducts } from '../services/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -32,30 +33,27 @@ export default function AdminDashboard() {
   const loadAll = async () => {
     try {
       const [usersRes, ordersRes, productsRes] = await Promise.allSettled([
-        fetch(`${API_BASE_URL}/auth/users`),
-        fetch(`${API_BASE_URL}/orders`),
-        fetch(`${API_BASE_URL}/products`),
+        fetchAllUsers(),
+        fetchAllOrders(),
+        fetchAllProducts(),
       ]);
 
       let totalUsers = 0, totalOrders = 0, totalProducts = 0, pendingOrders = 0;
       let orders = [], users = [], products = [];
 
-      if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
-        const d = await usersRes.value.json();
-        users = d.data?.users || [];
+      if (usersRes.status === 'fulfilled') {
+        users = usersRes.value || [];
         totalUsers = users.length;
       }
 
-      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
-        const d = await ordersRes.value.json();
-        orders = d.data?.orders || [];
+      if (ordersRes.status === 'fulfilled') {
+        orders = ordersRes.value || [];
         totalOrders = orders.length;
         pendingOrders = orders.filter(o => o.orderStatus === 'placed' || o.orderStatus === 'processing').length;
       }
 
-      if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
-        const d = await productsRes.value.json();
-        products = d.data?.products || [];
+      if (productsRes.status === 'fulfilled') {
+        products = productsRes.value || [];
         totalProducts = products.length;
       }
 

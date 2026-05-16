@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
+import { 
+  fetchAllCollectionsAdmin, 
+  createCollection, 
+  updateCollection, 
+  deleteCollection 
+} from '../services/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://yash-collections-backend.vercel.app/api' || 'http://localhost:5000/api';
 
@@ -39,10 +45,8 @@ export default function AdminCollections() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API_BASE}/collections/admin/all`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch');
-      setCollections(data.data?.collections || []);
+      const data = await fetchAllCollectionsAdmin();
+      setCollections(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -116,15 +120,11 @@ export default function AdminCollections() {
       fd.append('isActive', formData.isActive);
       if (imageFile) fd.append('image', imageFile);
 
-      const url    = editingCol
-        ? `${API_BASE}/collections/${editingCol._id}`
-        : `${API_BASE}/collections`;
-      const method = editingCol ? 'PUT' : 'POST';
-
-      const res = await fetch(url, { method, body: fd });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to save');
+      if (editingCol) {
+        await updateCollection(editingCol._id, fd);
+      } else {
+        await createCollection(fd);
+      }
 
       await loadCollections();
       setShowModal(false);
@@ -138,8 +138,7 @@ export default function AdminCollections() {
   /* ── Delete ── */
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/collections/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      await deleteCollection(id);
       setCollections(prev => prev.filter(c => c._id !== id));
     } catch (err) {
       alert('Failed to delete: ' + err.message);

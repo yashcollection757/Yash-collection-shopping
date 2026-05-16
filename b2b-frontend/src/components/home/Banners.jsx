@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { bannerAPI } from '../../services/api';
 
 const Banners = () => {
   const [banners, setBanners] = useState({ 
@@ -10,8 +9,7 @@ const Banners = () => {
   });
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/banners`)
-      .then(res => res.json())
+    bannerAPI.getBanners()
       .then(data => {
         if (data.data?.banner) {
           setBanners(data.data.banner);

@@ -166,10 +166,25 @@ export const orderAPI = {
     getAllCollections: () => apiCall('/collections'),
   };
 
+  // ============= BANNER API =============
+  export const bannerAPI = {
+    getBanners: () => apiCall('/banners'),
+  };
+
+  // ============= CONTACT API =============
+  export const contactAPI = {
+    submitContact: (data) => apiCall('/contact/submit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  };
+
 export default {
   authAPI,
   productAPI,
   cartAPI,
   orderAPI,
   collectionAPI,
+  bannerAPI,
+  contactAPI,
 };

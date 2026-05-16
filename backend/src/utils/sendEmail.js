@@ -91,7 +91,16 @@ const sendEmail = async (options) => {
 
     // Priority 1: Resend (production - works on Render, domain verified)
     if (resendApiKey && resendApiKey !== 're_your_api_key_here') {
-      return await sendViaResend(options, emailUser);
+      try {
+        return await sendViaResend(options, emailUser);
+      } catch (resendError) {
+        console.error('[sendEmail] ⚠️ Resend failed:', resendError.message);
+        console.log('[sendEmail] 🔄 Falling back to SMTP...');
+        if (emailUser && emailPass) {
+          return await sendViaSMTP(options, emailUser, emailPass);
+        }
+        throw resendError; // Throw original error if no SMTP fallback
+      }
     }
 
     // Priority 2: SMTP (local development only)

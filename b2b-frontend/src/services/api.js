@@ -59,6 +59,24 @@ export const authAPI = {
       method: 'PUT',
       body: JSON.stringify(profileData),
     }),
+
+  forgotPasswordOtp: (email) =>
+    apiCall('/auth/forgot-password-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyOtp: (data) =>
+    apiCall('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  resetPasswordWithOtp: (data) =>
+    apiCall('/auth/verify-otp-reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // ============= PRODUCT API =============

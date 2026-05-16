@@ -181,3 +181,5 @@ process.on('uncaughtException', (error) => {
 });
 
 startServer();
+
+// Trigger nodemon restart for .env changes

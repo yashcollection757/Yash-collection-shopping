@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
 import Shop from './pages/Shop';
 import Collections from './pages/Collections';
 import ProductDetail from './pages/ProductDetail';
@@ -48,6 +49,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
         {/* Protected B2B Routes */}

@@ -9,10 +9,11 @@ import sendEmail from '../utils/sendEmail.js';
 
 
 const generateToken = (id, role) => {
+  const expiry = role === 'admin' ? '7d' : '30d';
   return jwt.sign(
     { id, role }, 
     process.env.JWT_SECRET, 
-    { expiresIn: API_CONSTANTS.JWT_EXPIRE }
+    { expiresIn: expiry }
   );
 };
 
@@ -492,39 +493,25 @@ export const forgotPasswordOtp = async (req, res, next) => {
       return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Please provide an email address');
     }
 
-    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
-    
-    if (!adminEmail) {
-      logger.error('Admin email not configured');
-      return sendError(res, HTTP_STATUS.INTERNAL_ERROR, 'Admin authentication not configured');
-    }
-
-    // Only allow admin email for forgot password
-    if (email.toLowerCase().trim() !== adminEmail) {
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
       // Return generic message so we don't expose which emails exist
-      return sendSuccess(res, 'If this email is registered, an OTP has been sent.', {});
-    }
-
-    let adminUser = await User.findOne({ email: adminEmail });
-    if (!adminUser) {
-      // Admin might not exist in DB yet — still return success to avoid leaking info
       return sendSuccess(res, 'If this email is registered, an OTP has been sent.', {});
     }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    adminUser.otp = otp;
-    adminUser.otpExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
-    await adminUser.save({ validateBeforeSave: false });
+    user.otp = otp;
+    user.otpExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save({ validateBeforeSave: false });
 
     try {
-      console.log('[forgotPasswordOtp] Attempting to send OTP to:', adminEmail);
-      console.log('[forgotPasswordOtp] OTP:', otp);
+      console.log('[forgotPasswordOtp] Attempting to send OTP to:', email);
       
       await sendEmail({
-        email: adminEmail,
-        subject: 'Admin Password Reset OTP - Yash Collections',
+        email: user.email,
+        subject: 'Password Reset OTP - Yash Collections',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5edf2; border-radius: 16px; background: #f8fbfc;">
             <div style="text-align: center; margin-bottom: 24px;">
@@ -533,8 +520,8 @@ export const forgotPasswordOtp = async (req, res, next) => {
               </div>
             </div>
             <h2 style="color: #1b2f3e; text-align: center; margin: 0 0 8px;">Password Reset OTP</h2>
-            <p style="color: #3e6b82; text-align: center; font-size: 14px; margin: 0 0 24px;">Yash Collections Admin Portal</p>
-            <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">Your One-Time Password (OTP) for admin password reset is:</p>
+            <p style="color: #3e6b82; text-align: center; font-size: 14px; margin: 0 0 24px;">Yash Collections</p>
+            <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">Hi <strong>${user.name}</strong>, your One-Time Password (OTP) for password reset is:</p>
             <div style="text-align: center; margin: 32px 0; padding: 20px; background: #e8f4f8; border-radius: 10px;">
               <span style="font-size: 36px; font-weight: bold; color: #1dbbcc; letter-spacing: 6px;">${otp}</span>
             </div>
@@ -547,13 +534,13 @@ export const forgotPasswordOtp = async (req, res, next) => {
         `,
       });
       console.log('[forgotPasswordOtp] ✅ OTP email sent successfully!');
-      logger.info('Password reset OTP sent', { email: adminEmail, otp });
-      return sendSuccess(res, 'OTP has been sent to your email. Valid for 15 minutes.', { email: adminEmail });
+      logger.info('Password reset OTP sent', { email: user.email });
+      return sendSuccess(res, 'OTP has been sent to your email. Valid for 15 minutes.', { email: user.email });
     } catch (emailErr) {
       console.error('[forgotPasswordOtp] ❌ Email send failed:', emailErr.message);
-      adminUser.otp = undefined;
-      adminUser.otpExpire = undefined;
-      await adminUser.save({ validateBeforeSave: false });
+      user.otp = undefined;
+      user.otpExpire = undefined;
+      await user.save({ validateBeforeSave: false });
       logger.error('Failed to send OTP email', { error: emailErr.message });
       return sendError(res, HTTP_STATUS.INTERNAL_ERROR, 'Email could not be sent. Please try again.');
     }
@@ -578,20 +565,8 @@ export const verifyOtpAndResetPassword = async (req, res, next) => {
       return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Password must be at least 6 characters');
     }
 
-    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
-    
-    if (!adminEmail) {
-      logger.error('Admin email not configured');
-      return sendError(res, HTTP_STATUS.INTERNAL_ERROR, 'Admin authentication not configured');
-    }
-
-    // Only allow admin email
-    if (email.toLowerCase().trim() !== adminEmail) {
-      return sendError(res, HTTP_STATUS.UNAUTHORIZED, 'Invalid email for admin reset');
-    }
-
     const user = await User.findOne({
-      email: adminEmail,
+      email: email.toLowerCase().trim(),
       otp: otp,
       otpExpire: { $gt: Date.now() },
     }).select('+otp +otpExpire +password');
@@ -605,7 +580,7 @@ export const verifyOtpAndResetPassword = async (req, res, next) => {
     user.otpExpire = undefined;
     await user.save();
 
-    logger.info('Admin password reset successfully via OTP', { userId: user._id });
+    logger.info('Password reset successfully via OTP', { userId: user._id });
     return sendSuccess(res, 'Password has been reset successfully. You can now log in with your new password.', {});
   } catch (error) {
     logger.error('Verify OTP and reset password error', { error: error.message });

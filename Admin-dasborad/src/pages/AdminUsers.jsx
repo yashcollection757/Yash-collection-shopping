@@ -4,6 +4,12 @@ import { fetchAllUsers, deleteUserAdmin } from '../services/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Returns clean token
+const getToken = () => {
+  const raw = localStorage.getItem('authToken') || '';
+  return raw.startsWith('Bearer ') ? raw.slice(7) : raw;
+};
+
 export default function AdminUsers() {
   const [users, setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +26,24 @@ export default function AdminUsers() {
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleApproval = async (id, currentStatus) => {
+    try {
+      setLoading(true);
+      await fetch(`${API_BASE_URL}/auth/users/${id}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ isVerified: !currentStatus })
+      });
+      await loadUsers();
+    } catch (err) {
+      console.error('Failed to update status', err);
       setLoading(false);
     }
   };
@@ -113,13 +137,33 @@ export default function AdminUsers() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <button 
-                          onClick={() => handleDelete(u._id)}
-                          className="px-4 py-2 text-[11px] font-bold rounded-lg border transition-all hover:bg-red-50"
-                          style={{ color: '#e53e3e', borderColor: '#e53e3e', background: 'transparent' }}
-                        >
-                          Delete
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {!u.isVerified && (
+                            <>
+                              <button 
+                                onClick={() => toggleApproval(u._id, u.isVerified)}
+                                className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:opacity-80"
+                                style={{ color: 'white', background: '#1dbbcc', borderColor: '#1dbbcc' }}
+                              >
+                                Accept
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(u._id)}
+                                className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-orange-50"
+                                style={{ color: '#e58a3e', borderColor: '#e58a3e', background: 'transparent' }}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          <button 
+                            onClick={() => handleDelete(u._id)}
+                            className="px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all hover:bg-red-50"
+                            style={{ color: '#e53e3e', borderColor: '#e53e3e', background: 'transparent' }}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -137,3 +181,4 @@ export default function AdminUsers() {
     </Layout>
   );
 }
+

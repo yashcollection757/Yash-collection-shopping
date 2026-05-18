@@ -5,6 +5,7 @@ import { orderAPI, authAPI } from '../services/api';
 const Checkout = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [orderSuccess, setOrderSuccess] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [formData, setFormData] = useState({
@@ -219,7 +220,11 @@ const Checkout = () => {
 
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('cartUpdated'));
-      navigate('/order-success');
+      setOrderSuccess({
+        orderId: savedOrder.orderNumber || localOrder.id,
+        total: total,
+        itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+      });
 
     } catch (err) {
       console.error('Order placement error:', err);
@@ -249,6 +254,84 @@ const Checkout = () => {
           <button onClick={() => setToast(null)} className="ml-auto text-gray-400 hover:text-gray-600">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
+        </div>
+      )}
+
+      {/* Order Success Popup Modal */}
+      {orderSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ animation: 'fadeIn 0.3s ease' }}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 p-8 text-center relative overflow-hidden" style={{ animation: 'popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            
+            {/* Confetti dots */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className="absolute rounded-full" style={{
+                  width: `${6 + Math.random() * 8}px`,
+                  height: `${6 + Math.random() * 8}px`,
+                  background: ['#1dbbcc', '#f2823a', '#22c55e', '#a855f7', '#f43f5e', '#3b82f6'][i % 6],
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  opacity: 0.15 + Math.random() * 0.2,
+                  animation: `confettiFall ${2 + Math.random() * 3}s ease-in-out infinite`,
+                  animationDelay: `${Math.random() * 2}s`,
+                }} />
+              ))}
+            </div>
+
+            {/* Success Icon */}
+            <div className="relative z-10">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-50 flex items-center justify-center" style={{ animation: 'bounceIn 0.6s ease 0.2s both' }}>
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: 'checkDraw 0.5s ease 0.6s forwards' }} />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Order Placed Successfully! 🎉</h2>
+              <p className="text-gray-500 text-sm mb-6">Thank you for your order. We'll notify you once it ships.</p>
+
+              {/* Order Info */}
+              <div className="bg-gray-50 rounded-2xl p-5 mb-6 text-left space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Order ID</span>
+                  <span className="text-sm font-black text-gray-900">{orderSuccess.orderId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Items</span>
+                  <span className="text-sm font-bold text-gray-700">{orderSuccess.itemCount} items</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Total Amount</span>
+                  <span className="text-lg font-black text-[#1dbbcc]">₹{orderSuccess.total.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="flex-1 bg-[#1b2f3e] text-white py-3.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all"
+                >
+                  Track Order
+                </button>
+                <button
+                  onClick={() => navigate('/shop')}
+                  className="flex-1 border-2 border-gray-200 text-gray-700 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes popIn { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+            @keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+            @keyframes checkDraw { to { stroke-dashoffset: 0; } }
+            @keyframes confettiFall { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(180deg); } }
+          `}</style>
         </div>
       )}
 

@@ -88,8 +88,8 @@ const Cart = () => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const shipping = subtotal > 5000 ? 0 : 200;
-  const total = subtotal + shipping;
+  const discount = Math.round(subtotal * 0.05); // 5% Discount
+  const total = subtotal - discount;
   const overLimit = subtotal > MAX_ORDER_VALUE;
   const moqMet = totalItems >= MIN_ORDER_QTY;
 
@@ -214,8 +214,8 @@ const Cart = () => {
 
               {/* Notice */}
               <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-semibold text-gray-500 text-center">
-                Max value per order: ₹62,000 – ₹67,000<br/>
-                <span className="text-[10px]">(You can place multiple orders)</span>
+                Per cartoon value is 62,000 - 67,000<br/>
+                <span className="text-[10px]">5% discount will be applied to your order</span>
               </div>
 
               <div className="space-y-3 mb-4 pb-4 border-b border-gray-100">
@@ -225,8 +225,8 @@ const Cart = () => {
                   <span className={`font-bold ${overLimit ? 'text-red-600' : 'text-gray-900'}`}>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Shipping</span>
-                  <span className="font-bold">{shipping === 0 ? <span className="text-green-600">FREE</span> : `₹${shipping}`}</span>
+                  <span>GST 5% Discount:</span>
+                  <span className="font-bold text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

@@ -28,7 +28,12 @@ const Contact = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Phone</h3>
             <p className="text-gray-500 text-sm mb-4">Mon-Sat, 10am to 7pm</p>
-            <a href="tel:+919836190771" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 98361 90771</a>
+            <div className="space-y-2">
+              <a href="tel:+919836190771" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 98361 90771</a>
+              <a href="tel:+919831798000" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 98317 98000</a>
+              <a href="tel:+918481098000" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 84810 98000</a>
+              <a href="tel:+918482098000" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 84820 98000</a>
+            </div>
           </div>
 
           {/* Email Card */}
@@ -38,7 +43,7 @@ const Contact = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
             <p className="text-gray-500 text-sm mb-4">We reply within 24 hours</p>
-            <a href="mailto:yashcollection757@gmail.com" className="text-[#1dbbcc] font-bold text-base hover:underline block break-all">yashcollection757@gmail.com</a>
+            <a href="mailto:yashcollection2@gmail.com" className="text-[#1dbbcc] font-bold text-base hover:underline block break-all">yashcollection2@gmail.com</a>
           </div>
 
           {/* WhatsApp Card */}
@@ -48,7 +53,7 @@ const Contact = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">WhatsApp</h3>
             <p className="text-gray-500 text-sm mb-4">Quick chat support</p>
-            <a href="https://wa.me/919836190771" target="_blank" rel="noopener noreferrer" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 98361 90771</a>
+            <a href="https://wa.me/919831798000" target="_blank" rel="noopener noreferrer" className="text-[#1dbbcc] font-bold text-lg hover:underline block">+91 98317 98000</a>
           </div>
 
         </div>
@@ -63,8 +68,9 @@ const Contact = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-2">Our Address</h3>
               <p className="text-gray-500 text-base leading-relaxed">
                 Yash Collections<br />
-                Wholesale Clothing & Fashion<br />
-                Howrah, West Bengal, India
+                76/18/1 Banaras road , Jittu babu ka Godown<br />
+                Howrah , Kolkata (West Bengal) -711101<br />
+                India
               </p>
             </div>
           </div>
@@ -78,15 +84,12 @@ const Contact = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Business Hours</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex justify-between gap-8">
-                  <span className="text-gray-500">Monday - Saturday</span>
-                  <span className="font-bold text-gray-900">10:00 AM - 7:00 PM</span>
+              <div className="space-y-3">
+                <div className="flex justify-between gap-8 items-center">
+                  <span className="text-gray-500">All Days</span>
+                  <span className="font-bold text-[#1dbbcc] text-lg">24/7 Available</span>
                 </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-gray-500">Sunday</span>
-                  <span className="font-bold text-red-500">Closed</span>
-                </div>
+                <p className="text-gray-500 text-sm">Always ready to serve you!</p>
               </div>
             </div>
           </div>

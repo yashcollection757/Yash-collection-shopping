@@ -59,7 +59,7 @@ export default function AdminOrders() {
     const printWindow = window.open('', '_blank');
     const totalItems = order.items.reduce((sum, i) => sum + i.quantity, 0);
     const subtotal = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const shipping = (order.totalPrice || order.subtotal || 0) - subtotal;
+    const discount = Math.round(subtotal * 0.05); // 5% Discount
     const date = new Date(order.createdAt).toLocaleDateString();
 
     const html = `
@@ -113,8 +113,8 @@ export default function AdminOrders() {
             <thead>
               <tr>
                 <th>Item</th>
-                <th>Price</th>
                 <th>Qty</th>
+                <th>Price</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -122,8 +122,8 @@ export default function AdminOrders() {
               ${order.items.map(i => `
                 <tr>
                   <td>${i.name || 'Product'} ${i.size ? `<span style="color:#70a0b5; font-size:12px;">(Size: ${i.size})</span>` : ''}</td>
-                  <td>₹${(i.price || 0).toLocaleString()}</td>
                   <td>${i.quantity}</td>
+                  <td>₹${(i.price || 0).toLocaleString()}</td>
                   <td>₹${((i.price || 0) * (i.quantity || 1)).toLocaleString()}</td>
                 </tr>
               `).join('')}
@@ -131,8 +131,7 @@ export default function AdminOrders() {
           </table>
           <div class="totals">
             <div class="totals-row"><span>Total Quantity:</span> <span>${totalItems} units</span></div>
-            <div class="totals-row"><span>Subtotal:</span> <span>₹${subtotal.toLocaleString()}</span></div>
-            <div class="totals-row"><span>Shipping:</span> <span>₹${shipping.toLocaleString()}</span></div>
+            <div class="totals-row"><span>GST 5% Discount:</span> <span class="" style="color: #27ae60; font-weight: bold;">-₹${Math.round(subtotal * 0.05).toLocaleString()}</span></div>
             <div class="totals-row grand"><span>Total:</span> <span>₹${(order.totalPrice || order.subtotal || 0).toLocaleString()}</span></div>
           </div>
           <script>

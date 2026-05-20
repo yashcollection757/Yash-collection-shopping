@@ -14,6 +14,7 @@ const Checkout = () => {
     phone: '',
     businessName: '',
     gstNumber: '',
+    dob: '',
     address: '',
     city: '',
     state: '',
@@ -65,6 +66,7 @@ const Checkout = () => {
       phone: addr.phone || prev.phone,
       businessName: addr.businessName || prev.businessName,
       gstNumber: addr.gstNumber || prev.gstNumber,
+      dob: addr.dob || prev.dob,
       address: addr.address || '',
       city: addr.city || '',
       state: addr.state || '',
@@ -140,8 +142,8 @@ const Checkout = () => {
   }, [navigate]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 5000 ? 0 : 200;
-  const total = subtotal + shipping;
+  const discount = Math.round(subtotal * 0.05); // 5% Discount
+  const total = subtotal - discount;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -196,8 +198,9 @@ const Checkout = () => {
         },
         paymentMethod: 'cod',
         subtotal,
-        shipping,
         total,
+        discount,
+        dob: formData.dob,
         orderNote: formData.orderNote,
       });
 
@@ -420,6 +423,10 @@ const Checkout = () => {
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number</label>
                   <input required type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth</label>
+                  <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
+                </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Complete Address</label>
                   <textarea required name="address" value={formData.address} onChange={handleInputChange} rows="3" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all resize-none" placeholder="House No, Building, Street Name..." />
@@ -471,8 +478,8 @@ const Checkout = () => {
                   <span className="font-bold text-gray-900">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
-                  <span className="font-bold text-gray-900">{shipping === 0 ? <span className="text-green-600">FREE</span> : `₹${shipping}`}</span>
+                  <span>GST 5% Discount:</span>
+                  <span className="font-bold text-gray-900 text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

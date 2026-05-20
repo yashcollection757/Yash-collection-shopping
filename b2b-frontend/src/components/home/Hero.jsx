@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <div className="relative w-full flex items-center min-h-screen bg-[#f8fbfe] pt-20 pb-10 overflow-hidden">
+    <div className="relative w-full flex flex-col items-center min-h-screen bg-[#f8fbfe] pt-20 pb-10 overflow-hidden">
+
+      {/* Sacred Mantras - Below Navigation */}
+      <div className="w-full text-center mb-8 sm:mb-12">
+        <p className="text-red-600 text-base sm:text-lg font-bold">
+          ॐ गणेशाय नमः 🙏 &nbsp; || &nbsp; जय श्री सांवलिया सेठ 🦚
+        </p>
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-12 z-10 relative">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -35,9 +42,9 @@ const Hero = () => {
           <div className="flex items-center justify-center lg:justify-end w-full mt-8 lg:mt-0">
             <div className="relative w-full max-w-[320px] sm:max-w-[450px] lg:max-w-[650px] h-[300px] sm:h-[400px] lg:h-[480px] bg-gradient-to-b from-brand-50 to-brand-100/50 rounded-[2rem] sm:rounded-[2.5rem] border-[4px] sm:border-[6px] border-white shadow-2xl flex items-center justify-center overflow-hidden group">
               <img 
-                src="/images/newhero.png" 
+                src="/images/banner1.jpeg" 
                 alt="Kids illustration" 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
               />
             </div>
           </div>

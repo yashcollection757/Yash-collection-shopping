@@ -337,3 +337,30 @@ export const getAllOrders = async (req, res, next) => {
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };
+
+/**
+ * Delete order (Admin only)
+ * DELETE /api/orders/:id
+ */
+export const deleteOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      logger.warn('Order not found for deletion', { orderId: id });
+      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
+    }
+
+    await Order.findByIdAndDelete(id);
+
+    logger.info('Order deleted successfully', { orderId: id });
+
+    return sendSuccess(res, 'Order deleted successfully', { orderId: id });
+
+  } catch (error) {
+    logger.error('Error deleting order', { error: error.message, orderId: req.params.id });
+    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
+  }
+};

@@ -14,13 +14,7 @@ const Footer = () => {
             {/* Brand — full width on mobile */}
             <div className="col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-accent-cyan flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-black text-lg">Y</span>
-                </div>
-                <div>
-                  <p className="font-black text-white text-lg leading-none">Yash</p>
-                  <p className="text-[9px] tracking-[0.25em] text-gray-400 font-bold uppercase mt-0.5">Collection</p>
-                </div>
+                <img src="/images/logo1.png" alt="Yash Collection" className="h-24 w-auto object-contain" />
               </div>
 
               <div className="space-y-2 text-sm">
@@ -75,7 +69,7 @@ const Footer = () => {
               <div className="space-y-4">
                 {/* Social Links */}
                 <div className="flex gap-3">
-                  <a href="https://wa.me/919831798000" target="_blank" rel="noopener noreferrer" 
+                  <a href="https://wa.me/919836190771" target="_blank" rel="noopener noreferrer" 
                     className="w-10 h-10 bg-gray-800 hover:bg-green-600 rounded-lg flex items-center justify-center transition-all duration-200 group"
                     title="WhatsApp">
                     <svg className="w-5 h-5 text-gray-300 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">

@@ -50,14 +50,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-900 flex items-center justify-center shadow-md group-hover:bg-accent-cyan transition-colors duration-300">
-            <span className="text-white font-black text-lg sm:text-xl leading-none">Y</span>
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-lg sm:text-xl font-black text-brand-900 tracking-tight">Yash</span>
-            <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.25em] text-brand-600 uppercase mt-0.5">Collection</span>
-          </div>
+        <Link to="/" className="flex items-center shrink-0 group hover:opacity-80 transition-opacity duration-300">
+          <img 
+            src="/images/logo1.png" 
+            alt="Yash Collection" 
+            className="h-12 sm:h-14 w-auto object-contain"
+          />
         </Link>
 
         {/* Navigation — hidden on mobile */}

@@ -470,16 +470,33 @@ const Checkout = () => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 border-t pt-6 border-gray-100">
+                {/* 1. Name */}
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Name</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Name <span className="text-red-500">*</span></label>
                   <input required type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Full Name" />
                 </div>
+
+                {/* 2. Business Name */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Business Name <span className="text-red-500">*</span></label>
+                  <input required type="text" name="businessName" value={formData.businessName} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Company Ltd." />
+                </div>
+
+                {/* 3. GST Number */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number <span className="text-red-500">*</span></label>
+                  <input required type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
+                </div>
+
+                {/* 4. Email Address */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address <span className="text-red-500">*</span></label>
                   <input required type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="name@example.com" />
                 </div>
+
+                {/* 5. Phone Number */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Phone Number</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:border-brand-600 focus-within:ring-1 focus-within:ring-brand-600 transition-all bg-white">
                     <div className="flex items-center gap-2 pr-3 pointer-events-none select-none">
                       <img src="https://flagcdn.com/w40/in.png" alt="India Flag" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
@@ -500,18 +517,7 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Business Name</label>
-                  <input required type="text" name="businessName" value={formData.businessName} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Company Ltd." />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number</label>
-                  <input required type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
-                  <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
-                </div>
+                {/* 6. Alternate Phone Number (Optional) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Alternate Phone Number (Optional)</label>
                   <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus:within:border-brand-600 focus:within:ring-1 focus:within:ring-brand-600 transition-all bg-white">
@@ -532,29 +538,47 @@ const Checkout = () => {
                     />
                   </div>
                 </div>
+
+                {/* 7. Date of Birth */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
+                  <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
+                </div>
+
+                {/* 8. Anniversary (Optional) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Anniversary (Optional)</label>
                   <input type="date" name="anniversary" value={formData.anniversary} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
                 </div>
+
+                {/* 9. Complete Address */}
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Complete Address</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Complete Address <span className="text-red-500">*</span></label>
                   <textarea required name="address" value={formData.address} onChange={handleInputChange} rows="3" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all resize-none" placeholder="House No, Building, Street Name..." />
                 </div>
+
+                {/* 10. Pincode */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Pincode</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Pincode <span className="text-red-500">*</span></label>
                   <input required type="text" name="pincode" value={formData.pincode} onChange={(e) => handlePincodeChange(e.target.value.replace(/\D/g, '').substring(0, 6))} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="400001" />
                 </div>
+
+                {/* 11. City */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">State</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">City <span className="text-red-500">*</span></label>
+                  <input required type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="City" />
+                </div>
+
+                {/* 12. State */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">State <span className="text-red-500">*</span></label>
                   <select required name="state" value={formData.state} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all bg-white">
                     <option value="">Select State</option>
                     {statesInIndia.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">City</label>
-                  <input required type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="City" />
-                </div>
+
+                {/* Order Note (Optional) */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Order Message / Special Instructions (Optional)</label>
                   <textarea name="orderNote" value={formData.orderNote} onChange={handleInputChange} rows="2" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all resize-none" placeholder="Any specific instructions for shipping or order?" />

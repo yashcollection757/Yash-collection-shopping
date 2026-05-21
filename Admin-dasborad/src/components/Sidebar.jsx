@@ -29,11 +29,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col z-40" style={{ background: '#1b2f3e' }}>
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-lg text-white" style={{ background: '#1dbbcc' }}>Y</div>
-        <div>
-          <p className="font-black text-white text-sm leading-none">Yash</p>
-          <p className="text-[9px] font-bold tracking-[0.25em] uppercase mt-0.5" style={{ color: '#70a0b5' }}>Collection</p>
-        </div>
+        <img src="/images/logo1.png" alt="Yash Collection" className="h-12 w-auto object-contain" />
         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(29,187,204,0.2)', color: '#1dbbcc' }}>Admin</span>
       </div>
 

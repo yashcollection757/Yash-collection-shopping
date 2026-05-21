@@ -384,20 +384,33 @@ const UserProfile = () => {
                   <form onSubmit={saveAddress} className="p-6 sm:p-8 bg-white border-t border-gray-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
+                      {/* 1. Name */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Address Label</label>
-                        <input required type="text" value={addressForm.title} onChange={e => setAddressForm({...addressForm, title: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="e.g. Home, Office" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Name</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Name <span className="text-red-500">*</span></label>
                         <input required type="text" value={addressForm.name} onChange={e => setAddressForm({...addressForm, name: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Full Name" />
                       </div>
+
+                      {/* 2. Business Name */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Business Name <span className="text-red-500">*</span></label>
+                        <input required type="text" value={addressForm.businessName} onChange={e => setAddressForm({...addressForm, businessName: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Company Ltd." />
+                      </div>
+
+                      {/* 3. GST Number */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number <span className="text-red-500">*</span></label>
+                        <input required type="text" value={addressForm.gstNumber} onChange={e => setAddressForm({...addressForm, gstNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
+                      </div>
+
+                      {/* 4. Email Address */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address <span className="text-red-500">*</span></label>
                         <input required type="email" value={addressForm.email} onChange={e => setAddressForm({...addressForm, email: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="name@example.com" />
                       </div>
+
+                      {/* 5. Phone Number */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Phone Number</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Phone Number <span className="text-red-500">*</span></label>
                         <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:border-brand-600 focus-within:ring-1 focus-within:ring-brand-600 transition-all bg-white">
                           <div className="flex items-center gap-2 pr-3 pointer-events-none select-none">
                             <img src="https://flagcdn.com/w40/in.png" alt="India Flag" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
@@ -416,18 +429,8 @@ const UserProfile = () => {
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Business Name</label>
-                        <input required type="text" value={addressForm.businessName} onChange={e => setAddressForm({...addressForm, businessName: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="Your Company Ltd." />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number</label>
-                        <input type="text" value={addressForm.gstNumber} onChange={e => setAddressForm({...addressForm, gstNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
-                        <input required type="date" value={addressForm.dob} onChange={e => setAddressForm({...addressForm, dob: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
-                      </div>
+
+                      {/* 6. Alternate Phone (Optional) */}
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Alternate Phone (Optional)</label>
                         <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:border-brand-600 focus-within:ring-1 focus-within:ring-brand-600 transition-all bg-white">
@@ -447,28 +450,44 @@ const UserProfile = () => {
                           />
                         </div>
                       </div>
+
+                      {/* 7. Date of Birth */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
+                        <input required type="date" value={addressForm.dob} onChange={e => setAddressForm({...addressForm, dob: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
+                      </div>
+
+                      {/* 8. Anniversary (Optional) */}
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Anniversary (Optional)</label>
                         <input type="date" value={addressForm.anniversary} onChange={e => setAddressForm({...addressForm, anniversary: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
                       </div>
+
+                      {/* 9. Full Address */}
                       <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Address</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Address <span className="text-red-500">*</span></label>
                         <textarea required rows="3" value={addressForm.address} onChange={e => setAddressForm({...addressForm, address: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all resize-none" placeholder="House No, Building, Street Name..." />
                       </div>
+
+                      {/* 10. Pincode */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Pincode</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Pincode <span className="text-red-500">*</span></label>
                         <input required type="text" value={addressForm.pincode} onChange={e => handlePincodeChange(e.target.value.replace(/\D/g, '').substring(0, 6))} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="400001" />
                       </div>
+
+                      {/* 11. City */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">State</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">City <span className="text-red-500">*</span></label>
+                        <input required type="text" value={addressForm.city} onChange={e => setAddressForm({...addressForm, city: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="City" />
+                      </div>
+
+                      {/* 12. State */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">State <span className="text-red-500">*</span></label>
                         <select required value={addressForm.state} onChange={e => setAddressForm({...addressForm, state: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all bg-white">
                           <option value="">Select State</option>
                           {statesInIndia.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">City</label>
-                        <input required type="text" value={addressForm.city} onChange={e => setAddressForm({...addressForm, city: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="City" />
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-3 mt-8">

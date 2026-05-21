@@ -18,7 +18,7 @@ const generateOrderNumber = () => {
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, paymentMethod, items, subtotal, shipping, total, orderNote } = req.body;
+    const { shippingAddress, paymentMethod, items, subtotal, gst, total, orderNote } = req.body;
 
     // Validate input
     if (!shippingAddress || !paymentMethod) {
@@ -33,8 +33,8 @@ export const createOrder = async (req, res, next) => {
     }
 
     const calculatedSubtotal = subtotal || items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const calculatedShipping = shipping !== undefined ? shipping : (calculatedSubtotal > 5000 ? 0 : 200);
-    const totalPrice = total || (calculatedSubtotal + calculatedShipping);
+    const calculatedGst = gst !== undefined ? gst : Math.round(calculatedSubtotal * 0.05);
+    const totalPrice = total || (calculatedSubtotal + calculatedGst);
 
     // Create order
     const order = await Order.create({
@@ -52,8 +52,7 @@ export const createOrder = async (req, res, next) => {
       })),
       shippingAddress,
       subtotal: calculatedSubtotal,
-      tax: 0,
-      shipping: calculatedShipping,
+      gst: calculatedGst,
       totalPrice,
       paymentMethod,
       paymentStatus: 'pending',
@@ -134,8 +133,8 @@ export const createOrder = async (req, res, next) => {
                     <span style="color:#1b2f3e;font-size:13px;">₹${calculatedSubtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;">
-                    <span style="color:#70a0b5;font-size:13px;">Shipping</span>
-                    <span style="color:#1b2f3e;font-size:13px;">${calculatedShipping === 0 ? 'FREE' : '₹' + calculatedShipping}</span>
+                    <span style="color:#70a0b5;font-size:13px;">GST (5% included)</span>
+                    <span style="color:#1b2f3e;font-size:13px;">+₹${calculatedGst.toLocaleString('en-IN')}</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #e5edf2;">
                     <span style="color:#1b2f3e;font-size:15px;font-weight:800;">Total</span>

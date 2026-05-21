@@ -4,9 +4,14 @@ import { useNavigate } from 'react-router-dom';
 const Cart = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [toast, setToast] = useState(null);
 
   const MIN_ORDER_QTY = 18;
-  const MAX_ORDER_VALUE = 67000;
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     loadCart();
@@ -16,16 +21,92 @@ const Cart = () => {
       loadCart();
     };
 
+    // Listen for stock updates from order placement
+    const handleStockUpdate = () => {
+      loadCart();
+    };
+
     window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('stockUpdated', handleStockUpdate);
+
+    // Periodic stock refresh - every 2 seconds fetch fresh stock
+    const stockRefreshInterval = setInterval(() => {
+      refreshAllCartStock();
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('stockUpdated', handleStockUpdate);
+      clearInterval(stockRefreshInterval);
+    };
   }, []);
 
-  const loadCart = () => {
+  const loadCart = async () => {
     try {
       const saved = localStorage.getItem('cart');
-      if (saved) setCartItems(JSON.parse(saved));
+      if (saved) {
+        const items = JSON.parse(saved);
+        
+        // Fetch fresh stock from backend for each item
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const updatedItems = await Promise.all(
+          items.map(async (item) => {
+            try {
+              const res = await fetch(`${apiUrl}/products/${item.productId}`);
+              const data = await res.json();
+              
+              if (res.ok && data.data?.product) {
+                const product = data.data.product;
+                // Find the variant's current stock
+                const variant = product.variants?.find(v => v._id === item.variantId);
+                if (variant) {
+                  return { ...item, maxStock: variant.quantity };
+                }
+              }
+            } catch (e) {
+              console.error(`Failed to fetch stock for product ${item.productId}:`, e);
+            }
+            return item;
+          })
+        );
+        
+        setCartItems(updatedItems);
+      }
     } catch (e) {
       setCartItems([]);
+    }
+  };
+
+  const refreshAllCartStock = async () => {
+    if (cartItems.length === 0) return;
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      const updatedItems = await Promise.all(
+        cartItems.map(async (item) => {
+          try {
+            const res = await fetch(`${apiUrl}/products/${item.productId}`);
+            const data = await res.json();
+            
+            if (res.ok && data.data?.product) {
+              const product = data.data.product;
+              const variant = product.variants?.find(v => v._id === item.variantId);
+              
+              if (variant) {
+                return { ...item, maxStock: variant.quantity };
+              }
+            }
+          } catch (e) {
+            // Silent fail - keep using old stock
+          }
+          return item;
+        })
+      );
+      
+      setCartItems(updatedItems);
+    } catch (e) {
+      // Silent fail
     }
   };
 
@@ -53,32 +134,87 @@ const Cart = () => {
   };
 
   const handleQuantityChange = (id, newQuantity) => {
+    // Get the current item to access productId and variantId
+    const currentItem = cartItems.find(item => item.id === id);
+    if (!currentItem) return;
+
+    // Immediate state update for responsiveness
     if (newQuantity <= 0) {
-      saveCart(cartItems.filter(item => item.id !== id));
+      setCartItems(prev => {
+        const filtered = prev.filter(item => item.id !== id);
+        saveCartAsync(filtered); // Async save to backend
+        return filtered;
+      });
     } else {
-      const targetItem = cartItems.find(item => item.id === id);
-      if (!targetItem) return;
-      
-      // Enforce max stock strictly
-      let finalQuantity = Math.max(0, parseInt(newQuantity) || 0);
-      if (targetItem.maxStock !== undefined) {
-        finalQuantity = Math.min(finalQuantity, targetItem.maxStock);
+      setCartItems(prev => {
+        const updated = prev.map(item => {
+          if (item.id !== id) return item;
+          
+          let finalQuantity = Math.max(0, parseInt(newQuantity) || 0);
+          
+          // Check stock limit and show error if exceeded
+          if (item.maxStock !== undefined && finalQuantity > item.maxStock) {
+            finalQuantity = Math.min(finalQuantity, item.maxStock);
+            showToast('error', `Max available stock: ${item.maxStock} pieces`);
+          }
+          
+          return { ...item, quantity: finalQuantity };
+        });
+        
+        saveCartAsync(updated); // Async save to backend
+        return updated;
+      });
+
+      // Fetch fresh stock from backend (non-blocking)
+      refreshStockForItem(id, currentItem.productId, currentItem.variantId);
+    }
+  };
+
+  const refreshStockForItem = async (itemId, productId, variantId) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiUrl}/products/${productId}`);
+      const data = await res.json();
+
+      if (res.ok && data.data?.product) {
+        const product = data.data.product;
+        const variant = product.variants?.find(v => v._id === variantId);
+        
+        if (variant) {
+          // Update cart item with fresh stock
+          setCartItems(prev => prev.map(cartItem => 
+            cartItem.id === itemId 
+              ? { ...cartItem, maxStock: variant.quantity }
+              : cartItem
+          ));
+        }
       }
-      
-      if (finalQuantity === 0) {
-        saveCart(cartItems.filter(item => item.id !== id));
-        return;
-      }
-      
-      const updated = cartItems.map(item =>
-        item.id === id ? { ...item, quantity: finalQuantity } : item
-      );
-      const newTotal = updated.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      if (newTotal > MAX_ORDER_VALUE) {
-        alert(`Maximum order value is ₹${MAX_ORDER_VALUE.toLocaleString('en-IN')}. Please reduce quantity.`);
-        return;
-      }
-      saveCart(updated);
+    } catch (e) {
+      console.error('Failed to refresh stock:', e);
+    }
+  };
+
+  const saveCartAsync = (items) => {
+    // Save to localStorage
+    localStorage.setItem('cart', JSON.stringify(items));
+    
+    // Update navbar count
+    window.dispatchEvent(new Event('cartUpdated'));
+
+    // Sync with backend (async, non-blocking)
+    const token = localStorage.getItem('token');
+    if (token) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      fetch(`${apiUrl}/cart/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+        },
+        body: JSON.stringify({ items }),
+      }).catch(() => {
+        // Silent fail - cart is already in localStorage
+      });
     }
   };
 
@@ -88,9 +224,8 @@ const Cart = () => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const discount = Math.round(subtotal * 0.05); // 5% Discount
-  const total = subtotal - discount;
-  const overLimit = subtotal > MAX_ORDER_VALUE;
+  const gst = Math.round(subtotal * 0.05); // 5% GST
+  const total = subtotal + gst;
   const moqMet = totalItems >= MIN_ORDER_QTY;
 
   if (cartItems.length === 0) {
@@ -117,6 +252,17 @@ const Cart = () => {
 
   return (
     <div className="w-full bg-gray-50 min-h-screen pt-20">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 flex items-start gap-3 max-w-sm w-full px-5 py-4 rounded-2xl shadow-2xl border transition-all duration-300 ${
+          toast.type === 'error' ? 'bg-white border-red-200 text-red-800' : 'bg-white border-green-200 text-green-800'
+        }`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${toast.type === 'error' ? 'bg-red-100' : 'bg-green-100'}`}>
+            {toast.type === 'error' ? '✕' : '✓'}
+          </div>
+          <p className="text-sm font-semibold flex-1">{toast.message}</p>
+        </div>
+      )}
       <div className="container mx-auto px-4 sm:px-6 py-10 max-w-6xl">
         <h1 className="text-3xl font-black text-brand-900 mb-8">
           Shopping Cart
@@ -171,7 +317,7 @@ const Cart = () => {
                       >+</button>
                     </div>
                     {item.maxStock !== undefined && (
-                      <span className="text-[10px] text-gray-400 mt-1 pl-1 font-medium">Max available: {item.maxStock}</span>
+                      <span className="text-[10px] text-gray-400 mt-1 pl-1 font-medium">Max available: {Math.max(0, item.maxStock - item.quantity)}</span>
                     )}
                   </div>
 
@@ -197,13 +343,6 @@ const Cart = () => {
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
               <h2 className="text-xl font-black text-gray-900 mb-5">Order Summary</h2>
 
-              {/* Max limit warning */}
-              {overLimit && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-600">
-                  ⚠️ Max value per order is ₹{MAX_ORDER_VALUE.toLocaleString('en-IN')}. Please reduce quantity for this order (you can place multiple orders for remaining items).
-                </div>
-              )}
-
               {/* MOQ warning */}
               {!moqMet && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-700">
@@ -214,34 +353,32 @@ const Cart = () => {
 
               {/* Notice */}
               <div className="mb-4 p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-semibold text-gray-500 text-center">
-                Per cartoon value is 62,000 - 67,000<br/>
-                <span className="text-[10px]">5% discount will be applied to your order</span>
+                Per cartoon shipping charge will be 100 rs
               </div>
 
               <div className="space-y-3 mb-4 pb-4 border-b border-gray-100">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal ({totalItems} items)</span>
-
-                  <span className={`font-bold ${overLimit ? 'text-red-600' : 'text-gray-900'}`}>₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-gray-900">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>GST 5% Discount:</span>
-                  <span className="font-bold text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
+                  <span>GST (5% included):</span>
+                  <span className="font-bold text-brand-900">+₹{gst.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center mb-6">
                 <span className="font-black text-gray-900 text-lg">Total</span>
-                <span className={`font-black text-2xl ${overLimit ? 'text-red-600' : 'text-brand-900'}`}>
+                <span className="font-black text-2xl text-brand-900">
                   ₹{total.toLocaleString('en-IN')}
                 </span>
               </div>
 
               <button
                 onClick={() => navigate('/checkout')}
-                disabled={overLimit || !moqMet}
+                disabled={!moqMet}
                 className={`w-full py-4 rounded-xl font-bold text-sm transition-all mb-3 ${
-                  overLimit || !moqMet
+                  !moqMet
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-brand-900 text-white hover:bg-brand-600 shadow-lg hover:shadow-xl'
                 }`}

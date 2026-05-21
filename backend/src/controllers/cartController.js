@@ -95,7 +95,7 @@ export const addToCart = async (req, res, next) => {
       return sendError(res, HTTP_STATUS.NOT_FOUND, 'Product variant not found');
     }
 
-    // Check current stock
+    // Check current stock (just verify, don't reserve)
     if (variant.quantity < qty) {
       return sendError(
         res,
@@ -104,15 +104,11 @@ export const addToCart = async (req, res, next) => {
       );
     }
 
-    // Reserve stock by decrementing product variant quantity
-    variant.quantity -= qty;
-    await product.save();
-
-    logger.info('Stock reserved', {
+    logger.info('Stock availability verified', {
       productId,
       variantSize: variant.size,
-      quantityReserved: qty,
-      remainingStock: variant.quantity,
+      quantityRequested: qty,
+      availableStock: variant.quantity,
     });
 
     // Now add to user's cart
@@ -177,21 +173,8 @@ export const removeFromCart = async (req, res, next) => {
 
     const removedQty = quantity || cart.items[itemIdx].quantity;
 
-    // Return stock to product if removing (productId and quantity provided)
-    if (productId && removedQty > 0) {
-      const product = await Product.findById(productId);
-      if (product) {
-        const variant = variantId
-          ? product.variants.find(v => v._id.toString() === variantId)
-          : product.variants.find(v => v.size === cart.items[itemIdx].size);
-
-        if (variant) {
-          variant.quantity += removedQty;
-          await product.save();
-          logger.info('Stock returned', { productId, variantSize: variant.size, quantityReturned: removedQty });
-        }
-      }
-    }
+    // No stock manipulation on removal - stock only changes on actual order
+    logger.info('Item removed from cart (stock unchanged)', { productId, quantityRemoved: removedQty });
 
     cart.items.splice(itemIdx, 1);
     const totals = calcTotals(cart.items);
@@ -250,24 +233,7 @@ export const clearCart = async (req, res, next) => {
   try {
     const cart = await Cart.findOne({ user: req.user.id });
     
-    // Return all items' stock to products
-    if (cart && cart.items.length > 0) {
-      for (const item of cart.items) {
-        if (item.productId) {
-          const product = await Product.findById(item.productId);
-          if (product) {
-            const variant = item.variantId
-              ? product.variants.find(v => v._id.toString() === item.variantId)
-              : product.variants.find(v => v.size === item.size);
-
-            if (variant) {
-              variant.quantity += item.quantity;
-              await product.save();
-            }
-          }
-        }
-      }
-    }
+    // No stock manipulation on clear - stock only changes on actual order
 
     const clearedCart = await Cart.findOneAndUpdate(
       { user: req.user.id },

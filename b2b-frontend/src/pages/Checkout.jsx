@@ -12,9 +12,11 @@ const Checkout = () => {
     name: '',
     email: '',
     phone: '',
+    alternatePhone: '',
     businessName: '',
     gstNumber: '',
     dob: '',
+    anniversary: '',
     address: '',
     city: '',
     state: '',
@@ -53,8 +55,40 @@ const Checkout = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
+  const refreshAllStock = async (items) => {
+    if (!items || items.length === 0) return;
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      const updatedItems = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const res = await fetch(`${apiUrl}/products/${item.productId}`);
+            const data = await res.json();
+            
+            if (res.ok && data.data?.product) {
+              const product = data.data.product;
+              const variant = product.variants?.find(v => v._id === item.variantId);
+              
+              if (variant) {
+                return { ...item, maxStock: variant.quantity };
+              }
+            }
+          } catch (e) {
+            console.error(`Failed to refresh stock for ${item.productId}:`, e);
+          }
+          return item;
+        })
+      );
+      
+      setCartItems(updatedItems);
+    } catch (e) {
+      console.error('Failed to refresh all stock:', e);
+    }
+  };
+
   const MIN_ORDER_QTY = 18;
-  const MAX_ORDER_VALUE = 67000;
 
   const handleSelectAddress = (addr) => {
     if (!addr) return;
@@ -64,9 +98,11 @@ const Checkout = () => {
       name: addr.name || prev.name,
       email: addr.email || prev.email,
       phone: addr.phone || prev.phone,
+      alternatePhone: addr.alternatePhone || prev.alternatePhone,
       businessName: addr.businessName || prev.businessName,
       gstNumber: addr.gstNumber || prev.gstNumber,
       dob: addr.dob || prev.dob,
+      anniversary: addr.anniversary || prev.anniversary,
       address: addr.address || '',
       city: addr.city || '',
       state: addr.state || '',
@@ -82,11 +118,13 @@ const Checkout = () => {
 
       // Verify limits
       const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-      const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      if (items.length === 0 || totalItems < MIN_ORDER_QTY || subtotal > MAX_ORDER_VALUE) {
+      if (items.length === 0 || totalItems < MIN_ORDER_QTY) {
         navigate('/cart');
       }
+
+      // Refresh stock for all items
+      refreshAllStock(items);
     } catch (e) {
       navigate('/cart');
     }
@@ -139,11 +177,52 @@ const Checkout = () => {
       }
     };
     fetchProfile();
+
+    // Listen for cart and stock updates
+    const handleCartUpdate = () => {
+      try {
+        const saved = localStorage.getItem('cart');
+        const items = saved ? JSON.parse(saved) : [];
+        refreshAllStock(items);
+      } catch (e) {
+        console.error('Failed to handle cart update:', e);
+      }
+    };
+
+    const handleStockUpdate = () => {
+      try {
+        const saved = localStorage.getItem('cart');
+        const items = saved ? JSON.parse(saved) : [];
+        refreshAllStock(items);
+      } catch (e) {
+        console.error('Failed to handle stock update:', e);
+      }
+    };
+
+    const handleWindowFocus = () => {
+      try {
+        const saved = localStorage.getItem('cart');
+        const items = saved ? JSON.parse(saved) : [];
+        refreshAllStock(items);
+      } catch (e) {
+        console.error('Failed to refresh stock on focus:', e);
+      }
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('stockUpdated', handleStockUpdate);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('stockUpdated', handleStockUpdate);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, [navigate]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = Math.round(subtotal * 0.05); // 5% Discount
-  const total = subtotal - discount;
+  const gst = Math.round(subtotal * 0.05); // 5% GST
+  const total = subtotal + gst;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -154,7 +233,7 @@ const Checkout = () => {
     e.preventDefault();
 
     // Validations
-    if (!formData.name || !formData.email || !formData.phone || !formData.businessName || !formData.address || !formData.city || !formData.state || !formData.pincode) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.businessName || !formData.gstNumber || !formData.dob || !formData.address || !formData.city || !formData.state || !formData.pincode) {
       showToast('error', 'Please fill all the required address fields before placing the order.');
       return;
     }
@@ -168,7 +247,7 @@ const Checkout = () => {
       showToast('error', 'Please enter a valid 6-digit Pincode.');
       return;
     }
-    if (formData.gstNumber && formData.gstNumber.length !== 15) {
+    if (formData.gstNumber.length !== 15) {
       showToast('error', 'Please enter a valid 15-character GST Number.');
       return;
     }
@@ -189,6 +268,7 @@ const Checkout = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          alternatePhone: formData.alternatePhone,
           businessName: formData.businessName,
           gstNumber: formData.gstNumber,
           address: formData.address,
@@ -199,8 +279,9 @@ const Checkout = () => {
         paymentMethod: 'cod',
         subtotal,
         total,
-        discount,
+        gst,
         dob: formData.dob,
+        anniversary: formData.anniversary,
         orderNote: formData.orderNote,
       });
 
@@ -223,6 +304,10 @@ const Checkout = () => {
 
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('cartUpdated'));
+      
+      // Broadcast stock update event so all product pages refresh their data
+      window.dispatchEvent(new Event('stockUpdated'));
+      
       setOrderSuccess({
         orderId: savedOrder.orderNumber || localOrder.id,
         total: total,
@@ -424,8 +509,32 @@ const Checkout = () => {
                   <input required type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
                   <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Alternate Phone Number (Optional)</label>
+                  <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus:within:border-brand-600 focus:within:ring-1 focus:within:ring-brand-600 transition-all bg-white">
+                    <div className="flex items-center gap-2 pr-3 pointer-events-none select-none">
+                      <img src="https://flagcdn.com/w40/in.png" alt="India Flag" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
+                      <span className="text-sm font-bold text-gray-700">+91</span>
+                    </div>
+                    <input
+                      type="tel"
+                      name="alternatePhone"
+                      value={formData.alternatePhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').substring(0, 10);
+                        setFormData(prev => ({ ...prev, alternatePhone: val }));
+                      }}
+                      placeholder="98765 43210"
+                      className="flex-1 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-base tracking-wide min-w-0"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Anniversary (Optional)</label>
+                  <input type="date" name="anniversary" value={formData.anniversary} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Complete Address</label>
@@ -478,8 +587,8 @@ const Checkout = () => {
                   <span className="font-bold text-gray-900">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>GST 5% Discount:</span>
-                  <span className="font-bold text-gray-900 text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
+                  <span>GST (5% included):</span>
+                  <span className="font-bold text-brand-900">+₹{gst.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

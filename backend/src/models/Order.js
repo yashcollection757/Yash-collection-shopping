@@ -32,11 +32,7 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    tax: {
-      type: Number,
-      default: 0,
-    },
-    shipping: {
+    gst: {
       type: Number,
       default: 0,
     },

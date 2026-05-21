@@ -9,7 +9,7 @@ const UserProfile = () => {
     try { return JSON.parse(localStorage.getItem('savedAddresses') || '[]'); } catch { return []; }
   });
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [addressForm, setAddressForm] = useState({ id: '', title: '', name: '', email: '', phone: '', businessName: '', gstNumber: '', address: '', city: '', state: '', pincode: '', orderNote: '' });
+  const [addressForm, setAddressForm] = useState({ id: '', title: '', name: '', email: '', phone: '', alternatePhone: '', businessName: '', gstNumber: '', dob: '', anniversary: '', address: '', city: '', state: '', pincode: '', orderNote: '' });
 
   const statesInIndia = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
@@ -150,7 +150,7 @@ const UserProfile = () => {
     authAPI.updateProfile({ addresses: updated }).catch(err => console.error('Failed to save address to backend', err));
 
     setShowAddressForm(false);
-    setAddressForm({ id: '', title: '', name: '', email: '', phone: '', businessName: '', gstNumber: '', address: '', city: '', state: '', pincode: '', orderNote: '' });
+    setAddressForm({ id: '', title: '', name: '', email: '', phone: '', alternatePhone: '', businessName: '', gstNumber: '', dob: '', anniversary: '', address: '', city: '', state: '', pincode: '', orderNote: '' });
   };
 
   const deleteAddress = (id) => {
@@ -423,6 +423,33 @@ const UserProfile = () => {
                       <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">GST Number</label>
                         <input type="text" value={addressForm.gstNumber} onChange={e => setAddressForm({...addressForm, gstNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" placeholder="22AAAAA0000A1Z5" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth <span className="text-red-500">*</span></label>
+                        <input required type="date" value={addressForm.dob} onChange={e => setAddressForm({...addressForm, dob: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Alternate Phone (Optional)</label>
+                        <div className="flex items-center w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:border-brand-600 focus-within:ring-1 focus-within:ring-brand-600 transition-all bg-white">
+                          <div className="flex items-center gap-2 pr-3 pointer-events-none select-none">
+                            <img src="https://flagcdn.com/w40/in.png" alt="India Flag" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
+                            <span className="text-sm font-bold text-gray-700">+91</span>
+                          </div>
+                          <input
+                            type="tel"
+                            value={addressForm.alternatePhone}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, '').substring(0, 10);
+                              setAddressForm({ ...addressForm, alternatePhone: val });
+                            }}
+                            className="flex-1 bg-transparent focus:outline-none text-gray-900 placeholder-gray-400 text-base tracking-wide min-w-0"
+                            placeholder="98765 43210"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Anniversary (Optional)</label>
+                        <input type="date" value={addressForm.anniversary} onChange={e => setAddressForm({...addressForm, anniversary: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none transition-all" />
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Address</label>

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const MIN_ORDER_QTY = 18;
-const MAX_ORDER_VALUE = 67000;
 
 const ProductDetail = () => {
   const { id }       = useParams();
@@ -43,6 +42,14 @@ const ProductDetail = () => {
     };
 
     fetchProductInitial();
+
+    // Listen for stock updates from order placement
+    const handleStockUpdate = () => {
+      fetchProduct();
+    };
+
+    window.addEventListener('stockUpdated', handleStockUpdate);
+    return () => window.removeEventListener('stockUpdated', handleStockUpdate);
   }, [id]);
 
   const showToast = (type, message) => {
@@ -63,10 +70,6 @@ const ProductDetail = () => {
     if (!product) return;
     if (totalQty === 0) {
       showToast('error', 'Please select at least 1 piece to add to cart.');
-      return;
-    }
-    if (overMax) {
-      showToast('error', `Order value exceeds max limit of ₹${MAX_ORDER_VALUE.toLocaleString('en-IN')}.`);
       return;
     }
 
@@ -138,12 +141,6 @@ const ProductDetail = () => {
         }
       });
 
-      const mergedTotal = merged.reduce((s, i) => s + i.price * i.quantity, 0);
-      if (mergedTotal > MAX_ORDER_VALUE) {
-        showToast('error', `Order value exceeds ₹${MAX_ORDER_VALUE.toLocaleString('en-IN')}`);
-        return;
-      }
-
       localStorage.setItem('cart', JSON.stringify(merged));
       window.dispatchEvent(new Event('cartUpdated'));
 
@@ -198,7 +195,6 @@ const ProductDetail = () => {
   const variant      = product.variants[selectedVariant] || product.variants[0];
   const totalQty     = product.variants.reduce((sum, v) => sum + (quantities[v._id] || 0), 0);
   const totalAmount  = product.variants.reduce((sum, v) => sum + (quantities[v._id] || 0) * v.price, 0);
-  const overMax      = totalAmount > MAX_ORDER_VALUE;
   const hasQty       = totalQty > 0;
 
   return (
@@ -389,15 +385,13 @@ const ProductDetail = () => {
 
             {/* Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <button onClick={handleAddToCart} disabled={!hasQty || overMax}
+              <button onClick={handleAddToCart} disabled={!hasQty}
                 className={`flex-1 py-4 rounded-xl font-bold text-lg transition-all ${
-                  hasQty && !overMax
+                  hasQty
                     ? 'bg-brand-900 text-white hover:bg-brand-600 shadow-lg hover:shadow-xl'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 }`}>
-                {overMax
-                  ? '⚠️ EXCEEDS MAX ORDER ₹67,000'
-                  : hasQty
+                {hasQty
                   ? '🛒  ADD TO CART'
                   : 'SELECT QUANTITY TO ORDER'
                 }

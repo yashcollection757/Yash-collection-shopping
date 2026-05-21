@@ -20,14 +20,6 @@ const selectStyles = `
   }
 `;
 
-const prices = [
-  { range: '₹0 to ₹500',       min: 0,    max: 500,      count: null },
-  { range: '₹500 to ₹1000',    min: 500,  max: 1000,     count: null },
-  { range: '₹1000 to ₹1500',   min: 1000, max: 1500,     count: null },
-  { range: '₹1500 to ₹2500',   min: 1500, max: 2500,     count: null },
-  { range: 'more than ₹2500',  min: 2500, max: Infinity,  count: null },
-];
-
 const Shop = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,7 +30,6 @@ const Shop = () => {
 
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedSizes, setSelectedSizes]           = useState([]);
-  const [selectedPrices, setSelectedPrices]         = useState([]);
   const [sortBy, setSortBy]                         = useState('default');
   const [searchTerm, setSearchTerm]                 = useState('');
 
@@ -96,16 +87,14 @@ const Shop = () => {
 
   const toggleCategory = toggle(setSelectedCategories);
   const toggleSize     = toggle(setSelectedSizes);
-  const togglePrice    = toggle(setSelectedPrices);
 
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedSizes([]);
-    setSelectedPrices([]);
   };
 
   const hasActiveFilters =
-    selectedCategories.length > 0 || selectedSizes.length > 0 || selectedPrices.length > 0;
+    selectedCategories.length > 0 || selectedSizes.length > 0;
 
   /* ── Filter + sort ── */
   const filteredProducts = useMemo(() => {
@@ -128,16 +117,6 @@ const Shop = () => {
         p.variants?.some(v => selectedSizes.includes(v.size))
       );
 
-    if (selectedPrices.length > 0) {
-      list = list.filter(p => {
-        const minP = Math.min(...(p.variants?.map(v => v.price) || [Infinity]));
-        return selectedPrices.some(r => {
-          const range = prices.find(pr => pr.range === r);
-          return range && minP >= range.min && minP <= range.max;
-        });
-      });
-    }
-
     if (sortBy === 'price-low')
       list.sort((a, b) =>
         Math.min(...a.variants.map(v => v.price)) - Math.min(...b.variants.map(v => v.price)));
@@ -148,7 +127,7 @@ const Shop = () => {
       list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return list;
-  }, [products, selectedCategories, selectedSizes, selectedPrices, sortBy]);
+  }, [products, selectedCategories, selectedSizes, sortBy]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -190,7 +169,7 @@ const Shop = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
             </svg>
             <span className="flex-1 text-left">{sidebarOpen ? 'Hide Filters' : 'Show Filters'}</span>
-            {hasActiveFilters && <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-cyan-600">{selectedCategories.length + selectedSizes.length + selectedPrices.length}</span>}
+            {hasActiveFilters && <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-cyan-600">{selectedCategories.length + selectedSizes.length}</span>}
           </button>
           <div className="relative flex-1 sm:flex-none sm:w-48">
             <select value={sortBy} onChange={e => setSortBy(e.target.value)}
@@ -235,13 +214,12 @@ const Shop = () => {
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Active Filters</p>
                 <div className="flex flex-wrap gap-2">
-                  {[...selectedCategories, ...selectedSizes, ...selectedPrices].map(tag => (
+                  {[...selectedCategories, ...selectedSizes].map(tag => (
                     <div key={tag} className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-full text-xs font-medium text-cyan-700">
                       <span>{tag}</span>
                       <button onClick={() => {
                         if (selectedCategories.includes(tag)) toggleCategory(tag);
                         else if (selectedSizes.includes(tag)) toggleSize(tag);
-                        else togglePrice(tag);
                       }} className="hover:bg-cyan-200 rounded-full p-0.5 transition-colors">×</button>
                     </div>
                   ))}
@@ -285,21 +263,6 @@ const Shop = () => {
                 </div>
               </div>
             )}
-
-            {/* Price */}
-            <div className="mb-8">
-              <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider text-gray-800">Price</h3>
-              <div className="space-y-2.5">
-                {prices.map(p => (
-                  <SidebarCheck
-                    key={p.range}
-                    checked={selectedPrices.includes(p.range)}
-                    onChange={() => { togglePrice(p.range); setSidebarOpen(false); }}
-                    label={p.range}
-                  />
-                ))}
-              </div>
-            </div>
             </div>
           </aside>
 

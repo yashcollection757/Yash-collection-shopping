@@ -59,10 +59,11 @@ export default function AdminOrders() {
     const printWindow = window.open('', '_blank');
     const totalItems = order.items.reduce((sum, i) => sum + i.quantity, 0);
     const subtotal = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const discount = Math.round(subtotal * 0.05); // 5% Discount
-    const date = new Date(order.createdAt).toLocaleDateString();
+    const gst = Math.round(subtotal * 0.05); // 5% GST
+    const date = new Date(order.createdAt || Date.now()).toLocaleDateString('en-IN');
 
     const html = `
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Invoice - ${order.orderNumber || order._id}</title>
@@ -73,7 +74,7 @@ export default function AdminOrders() {
             .details { display: flex; justify-content: space-between; margin-bottom: 40px; }
             .box { padding: 15px; background: #f9f9f9; border-radius: 8px; width: 45%; }
             .box h3 { margin-top: 0; color: #70a0b5; font-size: 14px; text-transform: uppercase; }
-            table { w-full; width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
             th { background: #f4f7fa; font-weight: bold; }
             .totals { width: 300px; margin-left: auto; }
@@ -131,8 +132,9 @@ export default function AdminOrders() {
           </table>
           <div class="totals">
             <div class="totals-row"><span>Total Quantity:</span> <span>${totalItems} units</span></div>
-            <div class="totals-row"><span>GST 5% Discount:</span> <span class="" style="color: #27ae60; font-weight: bold;">-₹${Math.round(subtotal * 0.05).toLocaleString()}</span></div>
-            <div class="totals-row grand"><span>Total:</span> <span>₹${(order.totalPrice || order.subtotal || 0).toLocaleString()}</span></div>
+            <div class="totals-row"><span>Subtotal:</span> <span>₹${subtotal.toLocaleString()}</span></div>
+            <div class="totals-row"><span>GST (5% included):</span> <span style="color: #1b2f3e; font-weight: bold;">+₹${gst.toLocaleString()}</span></div>
+            <div class="totals-row grand"><span>Total:</span> <span>₹${(order.totalPrice || (subtotal + gst) || 0).toLocaleString()}</span></div>
           </div>
           <script>
             window.onload = () => { window.print(); window.close(); }

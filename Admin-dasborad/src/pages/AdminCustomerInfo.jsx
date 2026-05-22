@@ -19,7 +19,7 @@ export default function AdminCustomerInfo() {
       setLoading(true);
       const orders = await fetchAllOrders();
       
-      // Extract unique customers from orders using shipping address
+      // Extract unique customers from orders
       const customerMap = new Map();
       
       orders.forEach(order => {
@@ -27,25 +27,36 @@ export default function AdminCustomerInfo() {
         const email = addr.email || 'N/A';
         
         if (!customerMap.has(email)) {
-          const orderCount = orders.filter(o => 
+          // Get all orders for this customer
+          const customerOrders = orders.filter(o => 
             (o.shippingAddress?.email === email)
-          ).length;
+          );
+          
+          // Get DOB and Anniversary from order level fields (prefer most recent)
+          let dob = '-';
+          let anniversary = '-';
+          let alternatePhone = '-';
+          for (let o of customerOrders) {
+            if (o.dob && o.dob !== '-') dob = o.dob;
+            if (o.anniversary && o.anniversary !== '-') anniversary = o.anniversary;
+            if (o.alternatePhone && o.alternatePhone !== '-') alternatePhone = o.alternatePhone;
+          }
           
           customerMap.set(email, {
             name: addr.name || 'N/A',
             email: email,
             phone: addr.phone || 'N/A',
-            alternatePhone: addr.alternatePhone || '-',
+            alternatePhone: alternatePhone,
             businessName: addr.businessName || '-',
             gstNumber: addr.gstNumber || '-',
             address: addr.address || 'N/A',
             city: addr.city || '-',
             state: addr.state || '-',
             pincode: addr.pincode || '-',
-            dob: addr.dob || '-',
-            anniversary: addr.anniversary || '-',
-            orderCount: orderCount,
-            lastOrderDate: order.createdAt,
+            dob: dob,
+            anniversary: anniversary,
+            orderCount: customerOrders.length,
+            lastOrderDate: customerOrders[0].createdAt,
             _id: email
           });
         }

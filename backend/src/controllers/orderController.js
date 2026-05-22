@@ -18,7 +18,7 @@ const generateOrderNumber = () => {
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, paymentMethod, items, subtotal, gst, total, orderNote } = req.body;
+    const { shippingAddress, paymentMethod, items, subtotal, gst, total, orderNote, dob, anniversary, alternatePhone } = req.body;
 
     // Validate input
     if (!shippingAddress || !paymentMethod) {
@@ -58,6 +58,9 @@ export const createOrder = async (req, res, next) => {
       paymentStatus: 'pending',
       orderStatus: 'placed',
       orderNote,
+      dob: dob || '-',
+      anniversary: anniversary || '-',
+      alternatePhone: alternatePhone || '-',
     });
 
     // Decrement stock for the ordered items

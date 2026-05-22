@@ -282,6 +282,7 @@ const Checkout = () => {
         gst,
         dob: formData.dob,
         anniversary: formData.anniversary,
+        alternatePhone: formData.alternatePhone,
         orderNote: formData.orderNote,
       });
 

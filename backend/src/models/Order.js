@@ -59,6 +59,18 @@ const orderSchema = new mongoose.Schema(
     orderNote: {
       type: String,
     },
+    dob: {
+      type: String,
+      default: '-',
+    },
+    anniversary: {
+      type: String,
+      default: '-',
+    },
+    alternatePhone: {
+      type: String,
+      default: '-',
+    },
   },
   { timestamps: true }
 );

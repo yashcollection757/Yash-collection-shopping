@@ -5,6 +5,7 @@ import ForgotPassword   from './pages/ForgotPassword';
 import ResetPassword    from './pages/ResetPassword';
 import AdminDashboard   from './pages/AdminDashboard';
 import AdminUsers       from './pages/AdminUsers';
+import AdminCustomerInfo from './pages/AdminCustomerInfo';
 import AdminOrders      from './pages/AdminOrders';
 import AdminProducts    from './pages/AdminProducts';
 import AdminCollections from './pages/AdminCollections';
@@ -24,6 +25,7 @@ function App() {
 
         <Route path="/dashboard"    element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/users"        element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+        <Route path="/customer-info" element={<ProtectedRoute><AdminCustomerInfo /></ProtectedRoute>} />
         <Route path="/orders"       element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/products"     element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
         <Route path="/collections"  element={<ProtectedRoute><AdminCollections /></ProtectedRoute>} />

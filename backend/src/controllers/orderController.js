@@ -6,9 +6,9 @@ import { logger } from '../utils/logger.js';
 import sendEmail from '../utils/sendEmail.js';
 
 const generateOrderNumber = () => {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000);
-  return `ORD-${timestamp}-${random}`;
+  // Generate 5-digit random number: 10000-99999
+  const random = Math.floor(Math.random() * 90000) + 10000;
+  return `ORD-${random}`;
 };
 
 /**

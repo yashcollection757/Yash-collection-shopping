@@ -182,13 +182,6 @@ export default function AdminProducts() {
                         <td className="px-6 py-4">
                           <div className="flex gap-2 justify-center">
                             <button 
-                              onClick={() => window.open(`http://localhost:5173/product/${p._id}`, '_blank')}
-                              className="px-3 py-1 rounded text-xs font-bold border transition-all"
-                              style={{ borderColor: '#1dbbcc', color: '#1dbbcc' }}
-                            >
-                              View
-                            </button>
-                            <button 
                               onClick={() => {
                                 setEditingProduct(p);
                                 setShowAddModal(true);

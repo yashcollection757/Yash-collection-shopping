@@ -30,22 +30,6 @@ const Checkout = () => {
 
   const handlePincodeChange = async (pincode) => {
     setFormData(prev => ({ ...prev, pincode }));
-    if (pincode.length === 6) {
-      try {
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-        const data = await res.json();
-        if (data[0]?.Status === 'Success') {
-          const postOffice = data[0].PostOffice[0];
-          setFormData(prev => ({
-            ...prev,
-            city: postOffice.District,
-            state: postOffice.State
-          }));
-        }
-      } catch (error) {
-        console.error('Pincode lookup failed', error);
-      }
-    }
   };
 
   const [toast, setToast] = useState(null);
@@ -261,7 +245,47 @@ const Checkout = () => {
     }
 
     try {
-      // Call backend to save order in MongoDB
+      // STEP 1: Save current address to profile before placing order
+      const addressToSave = {
+        id: Date.now().toString(),
+        title: formData.businessName ? formData.businessName.toUpperCase() : `ADDRESS ${savedAddresses.length + 1}`,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        alternatePhone: formData.alternatePhone,
+        businessName: formData.businessName,
+        gstNumber: formData.gstNumber,
+        dob: formData.dob,
+        anniversary: formData.anniversary,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+      };
+
+      // Check if this exact address already exists (by address+city+pincode)
+      const addressExists = savedAddresses.some(addr => 
+        addr.address === addressToSave.address && 
+        addr.city === addressToSave.city && 
+        addr.pincode === addressToSave.pincode
+      );
+
+      let updatedAddresses = savedAddresses;
+      if (!addressExists) {
+        // Add new address to front of array (merge, never delete)
+        updatedAddresses = [addressToSave, ...savedAddresses];
+        console.log('[Checkout] New address added to saved list. Total:', updatedAddresses.length);
+      } else {
+        console.log('[Checkout] Address already exists in saved list.');
+      }
+
+      // Save merged addresses to backend + localStorage
+      setSavedAddresses(updatedAddresses);
+      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+      await authAPI.updateProfile({ addresses: updatedAddresses });
+      console.log('[Checkout] Address saved to backend. Total addresses:', updatedAddresses.length);
+
+      // STEP 2: Call backend to save order in MongoDB
       const response = await orderAPI.createOrder({
         items: cartItems,
         shippingAddress: {

@@ -17,22 +17,6 @@ const UserProfile = () => {
 
   const handlePincodeChange = async (pincode) => {
     setAddressForm(prev => ({ ...prev, pincode }));
-    if (pincode.length === 6) {
-      try {
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-        const data = await res.json();
-        if (data[0]?.Status === 'Success') {
-          const postOffice = data[0].PostOffice[0];
-          setAddressForm(prev => ({
-            ...prev,
-            city: postOffice.District,
-            state: postOffice.State
-          }));
-        }
-      } catch (error) {
-        console.error('Pincode lookup failed', error);
-      }
-    }
   };
 
   let storedUser = {};
@@ -139,9 +123,21 @@ const UserProfile = () => {
 
   const saveAddress = (e) => {
     e.preventDefault();
+    
+    // Auto-generate title if not provided
+    let titleToUse = addressForm.title;
+    if (!titleToUse || titleToUse.trim() === '') {
+      // Use business name as title, fallback to auto-generated name
+      if (addressForm.businessName && addressForm.businessName.trim()) {
+        titleToUse = addressForm.businessName.toUpperCase();
+      } else {
+        titleToUse = `ADDRESS ${addresses.length + 1}`;
+      }
+    }
+    
     const updated = addressForm.id 
-      ? addresses.map(a => a.id === addressForm.id ? addressForm : a)
-      : [...addresses, { ...addressForm, id: Date.now().toString() }];
+      ? addresses.map(a => a.id === addressForm.id ? { ...addressForm, title: titleToUse } : a)
+      : [...addresses, { ...addressForm, title: titleToUse, id: Date.now().toString() }];
     
     setAddresses(updated);
     localStorage.setItem('savedAddresses', JSON.stringify(updated));

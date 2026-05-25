@@ -28,9 +28,34 @@ const Shop = () => {
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
 
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedSizes, setSelectedSizes]           = useState([]);
-  const [sortBy, setSortBy]                         = useState('default');
+  // Initialize from localStorage if available, otherwise empty
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shopFilters');
+      return saved ? JSON.parse(saved).categories || [] : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  const [selectedSizes, setSelectedSizes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shopFilters');
+      return saved ? JSON.parse(saved).sizes || [] : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  const [sortBy, setSortBy] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shopFilters');
+      return saved ? JSON.parse(saved).sortBy || 'default' : 'default';
+    } catch {
+      return 'default';
+    }
+  });
+  
   const [searchTerm, setSearchTerm]                 = useState('');
 
   /* ── Read category from URL ── */
@@ -47,6 +72,16 @@ const Shop = () => {
       setSearchTerm('');
     }
   }, [location.search]);
+
+  /* ── Save filters to localStorage ── */
+  useEffect(() => {
+    const filters = {
+      categories: selectedCategories,
+      sizes: selectedSizes,
+      sortBy: sortBy
+    };
+    localStorage.setItem('shopFilters', JSON.stringify(filters));
+  }, [selectedCategories, selectedSizes, sortBy]);
 
   /* ── Fetch products from backend ── */
   useEffect(() => {
@@ -91,6 +126,8 @@ const Shop = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedSizes([]);
+    setSortBy('default');
+    localStorage.removeItem('shopFilters');
   };
 
   const hasActiveFilters =

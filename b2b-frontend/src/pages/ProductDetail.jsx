@@ -235,7 +235,7 @@ const ProductDetail = () => {
 
           {/* Image */}
           <div className="flex justify-center lg:justify-start">
-            <div className="relative bg-white rounded-2xl overflow-hidden w-full max-w-[550px] aspect-[5/4] shadow-sm border border-gray-100 flex items-center justify-center">
+            <div className="relative bg-white rounded-2xl overflow-hidden w-full max-w-[550px] h-[700px] shadow-sm border border-gray-100 flex items-center justify-center">
               <img
                 src={variant?.image || product.image || '/images/pro1.jpeg'}
                 alt={product.name}

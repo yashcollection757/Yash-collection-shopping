@@ -6,9 +6,9 @@ import { logger } from '../utils/logger.js';
 import sendEmail from '../utils/sendEmail.js';
 
 const generateOrderNumber = () => {
-  // Generate 5-digit random number: 10000-99999
-  const random = Math.floor(Math.random() * 90000) + 10000;
-  return `ORD-${random}`;
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  return `ORD-${timestamp}-${random}`;
 };
 
 /**
@@ -18,7 +18,7 @@ const generateOrderNumber = () => {
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, paymentMethod, items, subtotal, gst, total, orderNote, dob, anniversary, alternatePhone } = req.body;
+    const { shippingAddress, paymentMethod, items, subtotal, shipping, total, orderNote } = req.body;
 
     // Validate input
     if (!shippingAddress || !paymentMethod) {
@@ -33,8 +33,8 @@ export const createOrder = async (req, res, next) => {
     }
 
     const calculatedSubtotal = subtotal || items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const calculatedGst = gst !== undefined ? gst : Math.round(calculatedSubtotal * 0.05);
-    const totalPrice = total || (calculatedSubtotal + calculatedGst);
+    const calculatedShipping = shipping !== undefined ? shipping : (calculatedSubtotal > 5000 ? 0 : 200);
+    const totalPrice = total || (calculatedSubtotal + calculatedShipping);
 
     // Create order
     const order = await Order.create({
@@ -52,15 +52,13 @@ export const createOrder = async (req, res, next) => {
       })),
       shippingAddress,
       subtotal: calculatedSubtotal,
-      gst: calculatedGst,
+      tax: 0,
+      shipping: calculatedShipping,
       totalPrice,
       paymentMethod,
       paymentStatus: 'pending',
       orderStatus: 'placed',
       orderNote,
-      dob: dob || '-',
-      anniversary: anniversary || '-',
-      alternatePhone: alternatePhone || '-',
     });
 
     // Decrement stock for the ordered items
@@ -136,8 +134,8 @@ export const createOrder = async (req, res, next) => {
                     <span style="color:#1b2f3e;font-size:13px;">₹${calculatedSubtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;">
-                    <span style="color:#70a0b5;font-size:13px;">GST (5% included)</span>
-                    <span style="color:#1b2f3e;font-size:13px;">+₹${calculatedGst.toLocaleString('en-IN')}</span>
+                    <span style="color:#70a0b5;font-size:13px;">Shipping</span>
+                    <span style="color:#1b2f3e;font-size:13px;">${calculatedShipping === 0 ? 'FREE' : '₹' + calculatedShipping}</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #e5edf2;">
                     <span style="color:#1b2f3e;font-size:15px;font-weight:800;">Total</span>
@@ -347,23 +345,18 @@ export const getAllOrders = async (req, res, next) => {
  */
 export const deleteOrder = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    const order = await Order.findById(id);
+    const order = await Order.findByIdAndDelete(req.params.id);
 
     if (!order) {
-      logger.warn('Order not found for deletion', { orderId: id });
+      logger.warn('Order not found for deletion', { orderId: req.params.id });
       return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
     }
 
-    await Order.findByIdAndDelete(id);
-
-    logger.info('Order deleted successfully', { orderId: id });
-
-    return sendSuccess(res, 'Order deleted successfully', { orderId: id });
+    logger.info('Order deleted', { orderId: req.params.id, userId: req.user.id });
+    return sendSuccess(res, 'Order deleted successfully', { orderId: req.params.id });
 
   } catch (error) {
-    logger.error('Error deleting order', { error: error.message, orderId: req.params.id });
+    logger.error('Error deleting order', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };

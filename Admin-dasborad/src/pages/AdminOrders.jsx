@@ -60,7 +60,15 @@ export default function AdminOrders() {
     const totalItems = order.items.reduce((sum, i) => sum + i.quantity, 0);
     const subtotal = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const gst = Math.round(subtotal * 0.05); // 5% GST
+    const total = subtotal + gst;
     const date = new Date(order.createdAt || Date.now()).toLocaleDateString('en-IN');
+    
+    const consigneeAddress = order.shippingAddress?.address || '';
+    const consigneeCity = order.shippingAddress?.city || '';
+    const consigneeState = order.shippingAddress?.state || '';
+    const consigneePin = order.shippingAddress?.pincode || '';
+    const consigneeContact = order.shippingAddress?.phone || '';
+    const consigneeName = order.shippingAddress?.name || 'Guest';
 
     const html = `
       <!DOCTYPE html>
@@ -68,76 +76,157 @@ export default function AdminOrders() {
         <head>
           <title>Invoice - ${order.orderNumber || order._id}</title>
           <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 40px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
-            .logo { font-size: 24px; font-weight: bold; color: #1b2f3e; }
-            .details { display: flex; justify-content: space-between; margin-bottom: 40px; }
-            .box { padding: 15px; background: #f9f9f9; border-radius: 8px; width: 45%; }
-            .box h3 { margin-top: 0; color: #70a0b5; font-size: 14px; text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-            th { background: #f4f7fa; font-weight: bold; }
-            .totals { width: 300px; margin-left: auto; }
-            .totals-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-            .totals-row.grand { font-weight: bold; font-size: 18px; color: #1dbbcc; border-bottom: none; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; color: #000; padding: 20px; }
+            .container { width: 100%; max-width: 900px; margin: 0 auto; }
+            
+            /* Header Section */
+            .header { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #000; margin-bottom: 0; }
+            .header-left { padding: 15px; border-right: 2px solid #000; }
+            .company-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+            .company-details { font-size: 11px; line-height: 1.4; }
+            .header-right { padding: 15px; text-align: right; }
+            
+            /* Address Section */
+            .address-section { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #000; border-top: none; }
+            .address-box { padding: 12px; border-right: 2px solid #000; }
+            .address-box:last-child { border-right: none; }
+            .address-box-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 5px; }
+            .address-details { font-size: 11px; line-height: 1.5; }
+            .address-label { font-weight: bold; display: inline-block; width: 80px; }
+            
+            /* Items Table */
+            .items-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin: 0; }
+            .items-table th { border: 1px solid #000; padding: 8px; text-align: left; font-size: 11px; font-weight: bold; background: #f9f9f9; }
+            .items-table td { border: 1px solid #000; padding: 8px; font-size: 11px; }
+            .items-table tr:last-child td { border-bottom: 2px solid #000; }
+            .items-table .total-row { border-top: 2px solid #000; font-weight: bold; }
+            
+            /* Totals Section */
+            .totals-section { border: 2px solid #000; border-top: none; }
+            .totals-row { display: grid; grid-template-columns: 2fr 1fr; padding: 8px 12px; border-bottom: 1px solid #000; font-size: 11px; }
+            .totals-row.final { border-bottom: none; border-top: 2px solid #000; font-weight: bold; font-size: 13px; }
+            .totals-label { text-align: right; padding-right: 20px; }
+            .totals-value { text-align: right; font-weight: bold; }
+            
+            /* Print Styles */
+            @media print {
+              body { padding: 0; }
+              .container { max-width: 100%; }
+            }
           </style>
         </head>
         <body>
-          <div class="header">
-            <div class="logo">Yash Collections</div>
-            <div style="text-align: right;">
-              <h2>INVOICE</h2>
-              <p><strong>Order #:</strong> ${order.orderNumber || order._id}<br><strong>Date:</strong> ${date}</p>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <div class="header-left">
+                <div class="company-name">YASH COLLECTION</div>
+                <div class="company-details">
+                  12/1/a, DR P K BANERJEE ROAD<br>
+                  HOWRAH-711101<br>
+                  PH: 8481098000<br>
+                  GSTIN/UIN: 19BKHPK3278C1Z3<br>
+                  State Name: West Bengal, Code: 19<br>
+                  E-Mail: yashcollection2@gmail.com
+                </div>
+              </div>
+              <div class="header-right">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">INVOICE</div>
+                <div style="font-size: 11px; line-height: 1.6;">
+                  <strong>Order #:</strong> ${order.orderNumber || order._id}<br>
+                  <strong>Date:</strong> ${date}
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="details">
-            <div class="box">
-              <h3>Customer Information</h3>
-              <p>
-                <strong>${order.shippingAddress?.name || order.user?.name || 'Guest'}</strong><br>
-                ${order.shippingAddress?.email || order.user?.email || 'N/A'}<br>
-                ${order.shippingAddress?.phone || order.user?.phone || 'N/A'}<br>
-                ${order.shippingAddress?.businessName ? `Business: ${order.shippingAddress.businessName}<br>` : ''}
-                ${order.shippingAddress?.gstNumber ? `GST: ${order.shippingAddress.gstNumber}<br>` : ''}
-              </p>
+            
+            <!-- Address Section -->
+            <div class="address-section">
+              <div class="address-box">
+                <div class="address-box-title">Consignee (Ship to)</div>
+                <div class="address-details">
+                  <strong>${consigneeName}</strong><br>
+                  ${order.shippingAddress?.businessName ? `${order.shippingAddress.businessName}<br>` : ''}
+                  ${consigneeAddress}<br>
+                  ${consigneeCity}, ${consigneeState} - ${consigneePin}<br>
+                  <span class="address-label">State Name</span>: ${consigneeState}, Code: ${order.shippingAddress?.state ? '23' : 'N/A'}<br>
+                  <span class="address-label">Contact</span>: ${consigneeContact}
+                </div>
+              </div>
+              <div class="address-box">
+                <div class="address-box-title">Buyer (Bill to)</div>
+                <div class="address-details">
+                  <strong>${consigneeName}</strong><br>
+                  ${order.shippingAddress?.businessName ? `${order.shippingAddress.businessName}<br>` : ''}
+                  ${consigneeAddress}<br>
+                  ${consigneeCity}, ${consigneeState} - ${consigneePin}<br>
+                  <span class="address-label">State Name</span>: ${consigneeState}, Code: ${order.shippingAddress?.state ? '23' : 'N/A'}<br>
+                  <span class="address-label">Place of Supply</span>: ${consigneeState || 'N/A'}<br>
+                  ${order.shippingAddress?.gstNumber ? `<span class="address-label">GSTIN/UIN</span>: ${order.shippingAddress.gstNumber}<br>` : ''}
+                  <span class="address-label">Contact</span>: ${consigneeContact}<br>
+                  ${order.shippingAddress?.businessName ? `<span class="address-label">Business</span>: ${order.shippingAddress.businessName}` : ''}
+                </div>
+              </div>
             </div>
-            <div class="box">
-              <h3>Shipping Address</h3>
-              <p>
-                ${order.shippingAddress?.address || 'No address'}<br>
-                ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}
-              </p>
-              ${order.orderNote ? `<div style="margin-top: 10px; padding: 10px; background: #fff3cd; color: #856404; border-left: 4px solid #ffeeba; border-radius: 4px; font-size: 13px;"><strong>Note:</strong> ${order.orderNote}</div>` : ''}
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.items.map(i => `
+            
+            <!-- Items Table -->
+            <table class="items-table">
+              <thead>
                 <tr>
-                  <td>${i.name || 'Product'} ${i.size ? `<span style="color:#70a0b5; font-size:12px;">(Size: ${i.size})</span>` : ''}</td>
-                  <td>${i.quantity}</td>
-                  <td>₹${(i.price || 0).toLocaleString()}</td>
-                  <td>₹${((i.price || 0) * (i.quantity || 1)).toLocaleString()}</td>
+                  <th style="width: 5%;">SI<br>No</th>
+                  <th style="width: 35%;">Description of Goods</th>
+                  <th style="width: 12%;">Quantity</th>
+                  <th style="width: 12%;">Rate</th>
+                  <th style="width: 8%;">per</th>
+                  <th style="width: 10%;">Disc. %</th>
+                  <th style="width: 18%; text-align: right;">Amount</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="totals">
-            <div class="totals-row"><span>Total Quantity:</span> <span>${totalItems} units</span></div>
-            <div class="totals-row"><span>Subtotal:</span> <span>₹${subtotal.toLocaleString()}</span></div>
-            <div class="totals-row"><span>GST (5% included):</span> <span style="color: #1b2f3e; font-weight: bold;">+₹${gst.toLocaleString()}</span></div>
-            <div class="totals-row grand"><span>Total:</span> <span>₹${(order.totalPrice || (subtotal + gst) || 0).toLocaleString()}</span></div>
+              </thead>
+              <tbody>
+                ${order.items.map((item, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${item.name || 'Product'}${item.size ? ` (Size: ${item.size})` : ''}</td>
+                    <td>${item.quantity} PCS</td>
+                    <td>₹${(item.price || 0).toFixed(2)}</td>
+                    <td>PCS</td>
+                    <td>-</td>
+                    <td style="text-align: right;">₹${((item.price || 0) * item.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+                <tr class="total-row">
+                  <td colspan="2" style="text-align: right;">Total</td>
+                  <td>${totalItems} PCS</td>
+                  <td colspan="2"></td>
+                  <td></td>
+                  <td style="text-align: right;">₹${subtotal.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Totals Section -->
+            <div class="totals-section">
+              <div class="totals-row">
+                <div class="totals-label">Total Quantity:</div>
+                <div class="totals-value">${totalItems} units</div>
+              </div>
+              <div class="totals-row">
+                <div class="totals-label">Subtotal:</div>
+                <div class="totals-value">₹${subtotal.toFixed(2)}</div>
+              </div>
+              <div class="totals-row">
+                <div class="totals-label">GST (5% included):</div>
+                <div class="totals-value">₹${gst.toFixed(2)}</div>
+              </div>
+              <div class="totals-row final">
+                <div class="totals-label">Total:</div>
+                <div class="totals-value">₹${total.toFixed(2)}</div>
+              </div>
+            </div>
           </div>
+          
           <script>
-            window.onload = () => { window.print(); window.close(); }
+            window.onload = () => { window.print(); }
           </script>
         </body>
       </html>

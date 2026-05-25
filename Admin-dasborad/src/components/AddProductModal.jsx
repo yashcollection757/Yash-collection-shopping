@@ -275,7 +275,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
 
           {/* 6. Image Upload — size: 150KB - 300KB, JPG/JPEG/PNG only */}
           <div>
-            <label className={lbl}>Product Image * <span className="font-normal text-gray-400">(size: 150KB - 300KB · JPG / JPEG / PNG)</span></label>
+            <label className={lbl}>Product Image * <span className="font-normal text-gray-400">(size: 150KB - 300KB · 550px × 700px · JPG / JPEG / PNG)</span></label>
 
             <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition ${
               uploading ? 'border-cyan-400 bg-cyan-50' : 'border-gray-300 hover:border-cyan-400 hover:bg-cyan-50'
@@ -293,7 +293,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span className="text-sm font-medium">Click to upload image</span>
-                  <span className="text-xs">Max size: {MAX_IMAGE_KB} KB</span>
+                  <span className="text-xs text-gray-500">Recommended: 550px × 700px, Max size: {MAX_IMAGE_KB} KB</span>
                 </div>
               )}
               <input type="file" accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png" onChange={handleImageUpload}

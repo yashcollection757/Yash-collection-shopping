@@ -5,10 +5,19 @@ import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/appC
 import { logger } from '../utils/logger.js';
 import sendEmail from '../utils/sendEmail.js';
 
-const generateOrderNumber = () => {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000);
-  return `ORD-${timestamp}-${random}`;
+// Generate a unique 5-digit order number (e.g. ORD-04237)
+const generateOrderNumber = async () => {
+  const maxAttempts = 10;
+  for (let i = 0; i < maxAttempts; i++) {
+    const num = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const orderNum = `ORD-${num}`;
+    // ensure uniqueness
+    // Order model is declared below in this file; use it to check collisions
+    const exists = await Order.findOne({ orderNumber: orderNum });
+    if (!exists) return orderNum;
+  }
+  // fallback to timestamp-derived 5 digits
+  return `ORD-${Date.now().toString().slice(-5)}`;
 };
 
 /**
@@ -38,7 +47,7 @@ export const createOrder = async (req, res, next) => {
 
     // Create order
     const order = await Order.create({
-      orderNumber: generateOrderNumber(),
+      orderNumber: await generateOrderNumber(),
       user: req.user.id,
       items: items.map(item => ({
         productId: item.productId || item.id,

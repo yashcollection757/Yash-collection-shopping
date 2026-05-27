@@ -72,170 +72,176 @@ export default function AdminOrders() {
           <title>Invoice - ${order.orderNumber || order._id}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Arial', sans-serif; color: #333; padding: 20px; background: white; }
-            .container { max-width: 900px; margin: 0 auto; border: 2px solid #333; }
+            body { font-family: 'Arial', sans-serif; color: #333; padding: 30px 40px; background: white; }
+            .container { max-width: 850px; margin: 0 auto; }
             
-            /* Top Header Section */
-            .top-header { display: flex; border-bottom: 2px solid #333; }
-            .company-section { flex: 1; padding: 20px; border-right: 2px solid #333; }
-            .invoice-section { flex: 1; padding: 20px; }
-            .company-name { font-size: 20px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-            .company-logo { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
-            .company-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
-            .company-details { font-size: 12px; line-height: 1.6; }
-            .invoice-title { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 15px; }
-            .invoice-info { font-size: 13px; line-height: 1.8; text-align: right; }
-            .invoice-info .label { font-weight: bold; display: inline-block; width: 80px; }
+            /* Title */
+            .invoice-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
             
-            /* Address Sections */
-            .address-section { display: flex; border-bottom: 2px solid #333; min-height: 120px; }
-            .address-box { flex: 1; padding: 15px; font-size: 12px; line-height: 1.8; border-right: 2px solid #333; }
-            .address-box:last-child { border-right: none; }
-            .address-label { font-weight: bold; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; }
+            /* Header Row - Logo, Name, Details */
+            .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px solid #333; }
+            .logo-section { display: flex; align-items: center; gap: 12px; }
+            .logo { width: 60px; height: 60px; flex-shrink: 0; }
+            .logo img { width: 100%; height: 100%; object-fit: contain; }
+            .company-info { font-size: 11px; line-height: 1.4; }
+            .company-info .name { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+            .header-right { font-size: 11px; text-align: right; line-height: 1.5; }
+            .header-right .label { font-weight: bold; }
+            
+            /* Company Details Row */
+            .company-details-row { font-size: 10px; line-height: 1.5; margin-bottom: 10px; padding: 8px 0; display: flex; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #333; }
+            .detail-item { display: flex; align-items: center; gap: 5px; }
+            .detail-item strong { min-width: 80px; }
+            
+            /* Buyer Section */
+            .buyer-section { border: 1px solid #333; padding: 12px; margin-bottom: 12px; font-size: 11px; line-height: 1.6; }
+            .buyer-header { font-weight: bold; margin-bottom: 6px; }
+            .buyer-details { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+            .buyer-detail { }
+            .buyer-detail-label { font-weight: bold; font-size: 10px; }
             
             /* Items Table */
-            .items-section { padding: 0; }
-            table { width: 100%; border-collapse: collapse; }
-            .table-header { display: flex; border-bottom: 2px solid #333; font-weight: bold; font-size: 12px; }
-            .table-header > div { padding: 10px; display: flex; align-items: center; }
-            .col-si { flex: 0.5; border-right: 1px solid #333; text-align: center; }
-            .col-desc { flex: 3; border-right: 1px solid #333; }
-            .col-qty { flex: 1; border-right: 1px solid #333; text-align: center; }
-            .col-rate { flex: 1; border-right: 1px solid #333; text-align: center; }
-            .col-per { flex: 0.8; border-right: 1px solid #333; text-align: center; }
-            .col-disc { flex: 1; border-right: 1px solid #333; text-align: center; }
-            .col-amt { flex: 1; text-align: right; }
-            
-            .table-row { display: flex; border-bottom: 1px solid #333; font-size: 12px; }
-            .table-row > div { padding: 8px; display: flex; align-items: center; }
+            .items-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+            .items-table th { border: 1px solid #333; padding: 8px; font-weight: bold; text-align: center; background: #f5f5f5; }
+            .items-table th:first-child { text-align: center; }
+            .items-table td { border: 1px solid #333; padding: 8px; }
+            .items-table .si { text-align: center; width: 40px; }
+            .items-table .desc { text-align: left; }
+            .items-table .qty, .items-table .rate, .items-table .per, .items-table .disc { text-align: center; }
+            .items-table .amt { text-align: right; }
             
             /* Totals */
-            .totals-section { display: flex; border-top: 2px solid #333; }
-            .totals-left { flex: 1; padding: 15px; border-right: 2px solid #333; font-size: 12px; }
-            .totals-right { flex: 1; padding: 15px; font-size: 12px; }
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-            .total-row.grand { font-weight: bold; font-size: 14px; border-top: 1px solid #333; padding-top: 8px; margin-top: 8px; }
-            .grand-total { color: #1b2f3e; font-size: 16px; font-weight: bold; }
+            .totals-row { display: flex; justify-content: flex-end; font-size: 11px; margin-top: 12px; }
+            .totals { width: 350px; }
+            .total-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #ccc; }
+            .total-item.grand { font-weight: bold; font-size: 13px; border-bottom: 2px solid #333; padding: 8px 0; margin-top: 4px; }
             
             @media print {
               body { padding: 0; margin: 0; }
-              .container { border: 1px solid #333; }
             }
           </style>
         </head>
         <body>
-          <div class="container">
-            <!-- Top Header -->
-            <div class="top-header">
-              <div class="company-section">
-                  <div class="company-name">
-                  <div class="company-logo">
-                    <img src="${logoUrl}" alt="Yash Collection Logo">
-                  </div>
-                  <div>YASH COLLECTION</div>
-                </div>
-                <div class="company-details">
-                  12/1/a, DR P K BANERJEE ROAD<br>
-                  HOWRAH-711101<br>
-                  PH: 8482098000<br>
-                  GSTIN/UIN: 19BKHPK3278C1Z3<br>
-                  State Name : West Bengal, Code : 19<br>
-                  E-Mail : yashcollection2@gmail.com
-                </div>
+          <div class="invoice-title">ORDER INVOICE</div>
+          
+          <!-- Header with Logo, Company Name, and Date/Order Info -->
+          <div class="header-row">
+            <div class="logo-section">
+              <div class="logo">
+                <img src="${logoUrl}" alt="Yash Collection Logo">
               </div>
-              <div class="invoice-section">
-                <div class="invoice-title">INVOICE</div>
-                <div class="invoice-info">
-                  <div><span class="label">Order Date</span>: ${formattedDate}</div>
-                  <div><span class="label">Order No.</span>: ${order.orderNumber || order._id}</div>
-                </div>
+              <div class="company-info">
+                <div class="name">YASH COLLECTION</div>
               </div>
             </div>
-            
-            <!-- Address Sections -->
-            <div class="address-section">
-              <div class="address-box">
-                <div class="address-label">Consignee (Ship to)</div>
-                <strong>${order.shippingAddress?.name || 'Guest'}</strong><br>
-                ${order.shippingAddress?.businessName || ''}<br>
-                ${order.shippingAddress?.address || ''}<br>
-                ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}<br>
-                <br>
-                State Name : ${order.shippingAddress?.state || ''}<br>
-                Contact : ${order.shippingAddress?.phone || ''}<br>
-                ${order.shippingAddress?.businessName ? `Place of Supply : ${order.shippingAddress.state}<br>` : ''}
-                ${order.shippingAddress?.gstNumber ? `GSTIN/UIN : ${order.shippingAddress.gstNumber}<br>` : ''}
+            <div class="header-right">
+              <div><span class="label">📅 Date:</span> ${formattedDate}</div>
+              <div><span class="label">📋 Order No.:</span> ${order.orderNumber || order._id}</div>
+            </div>
+          </div>
+          
+          <!-- Company Details in One Line -->
+          <div class="company-details-row">
+            <div class="detail-item">
+              <strong>📍 Address:</strong> <span>12/1/a, DR P K BANERJEE ROAD, HOWRAH-711101</span>
+            </div>
+            <div class="detail-item">
+              <strong>📞 PH:</strong> <span>8482098000</span>
+            </div>
+            <div class="detail-item">
+              <strong>📧 GSTIN/UIN:</strong> <span>19BKHPK3278C1Z3</span>
+            </div>
+          </div>
+          <div class="company-details-row" style="border-bottom: 3px solid #333; margin-bottom: 12px;">
+            <div class="detail-item">
+              <strong>🏠 State Name:</strong> <span>West Bengal, Code : 19</span>
+            </div>
+            <div class="detail-item">
+              <strong>✉️ E-Mail:</strong> <span>yashcollection2@gmail.com</span>
+            </div>
+          </div>
+          
+          <!-- Buyer Section -->
+          <div class="buyer-section">
+            <div class="buyer-header">Buyer (Bill to): ${order.shippingAddress?.name || 'Guest'} | ${order.shippingAddress?.businessName || ''}, ${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}</div>
+            <div class="buyer-details">
+              <div class="buyer-detail">
+                <div class="buyer-detail-label">State Name</div>
+                <div>: ${order.shippingAddress?.state || ''}</div>
               </div>
-              <div class="address-box">
-                <div class="address-label">Buyer (Bill to)</div>
-                <strong>${order.shippingAddress?.name || 'Guest'}</strong><br>
-                ${order.shippingAddress?.businessName || ''}<br>
-                ${order.shippingAddress?.address || ''}<br>
-                ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}<br>
-                <br>
-                State Name : ${order.shippingAddress?.state || ''}<br>
-                Contact : ${order.shippingAddress?.phone || ''}<br>
-                Business : ${order.shippingAddress?.businessName || ''}<br>
-                ${order.shippingAddress?.gstNumber ? `GSTIN/UIN : ${order.shippingAddress.gstNumber}<br>` : ''}
+              <div class="buyer-detail">
+                <div class="buyer-detail-label">Contact</div>
+                <div>: ${order.shippingAddress?.phone || ''}</div>
+              </div>
+              <div class="buyer-detail">
+                <div class="buyer-detail-label">Place of Supply</div>
+                <div>: ${order.shippingAddress?.state || ''}</div>
+              </div>
+              <div class="buyer-detail">
+                <div class="buyer-detail-label">GSTIN/UIN</div>
+                <div>: ${order.shippingAddress?.gstNumber || ''}</div>
+              </div>
+              <div class="buyer-detail">
+                <div class="buyer-detail-label">Business</div>
+                <div>: ${order.shippingAddress?.businessName || ''}</div>
               </div>
             </div>
-            
-            <!-- Items Table -->
-            <div class="items-section">
-              <div class="table-header">
-                <div class="col-si">SI<br>No</div>
-                <div class="col-desc">Description of Goods</div>
-                <div class="col-qty">Quantity</div>
-                <div class="col-rate">Rate</div>
-                <div class="col-per">per</div>
-                <div class="col-disc">Disc. %</div>
-                <div class="col-amt">Amount</div>
-              </div>
+          </div>
+          
+          <!-- Items Table -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="si">Sl No.</th>
+                <th class="desc">Description of Goods</th>
+                <th class="qty">Quantity</th>
+                <th class="rate">Rate</th>
+                <th class="per">per</th>
+                <th class="disc">Disc. %</th>
+                <th class="amt">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
               ${order.items.map((item, idx) => `
-                <div class="table-row">
-                  <div class="col-si">${idx + 1}</div>
-                  <div class="col-desc">${item.name || 'Product'} ${item.size ? `(Size: ${item.size})` : ''}</div>
-                  <div class="col-qty">${item.quantity} PCS</div>
-                  <div class="col-rate">${(item.price || 0).toLocaleString('en-IN')}</div>
-                  <div class="col-per">PCS</div>
-                  <div class="col-disc">-</div>
-                  <div class="col-amt">${((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN')}</div>
-                </div>
+                <tr>
+                  <td class="si">${idx + 1}</td>
+                  <td class="desc">${item.name || 'Product'} ${item.size ? `(Size: ${item.size})` : ''}</td>
+                  <td class="qty">${item.quantity} PCS</td>
+                  <td class="rate">${(item.price || 0).toLocaleString('en-IN')}</td>
+                  <td class="per">PCS</td>
+                  <td class="disc">-</td>
+                  <td class="amt">${((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN')}</td>
+                </tr>
               `).join('')}
-              
-              <!-- Total Row -->
-              <div class="table-row" style="font-weight: bold;">
-                <div class="col-si"></div>
-                <div class="col-desc">Total</div>
-                <div class="col-qty">${totalItems} PCS</div>
-                <div class="col-rate"></div>
-                <div class="col-per"></div>
-                <div class="col-disc"></div>
-                <div class="col-amt">${subtotal.toLocaleString('en-IN')}</div>
+              <tr style="font-weight: bold;">
+                <td colspan="2" class="desc" style="text-align: right; padding-right: 20px;">Total</td>
+                <td class="qty">${totalItems} PCS</td>
+                <td class="rate"></td>
+                <td class="per"></td>
+                <td class="disc"></td>
+                <td class="amt">${subtotal.toLocaleString('en-IN')}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Totals -->
+          <div class="totals-row">
+            <div class="totals">
+              <div class="total-item">
+                <span>Total Quantity:</span>
+                <span>${totalItems} units</span>
               </div>
-            </div>
-            
-            <!-- Totals Section -->
-            <div class="totals-section">
-              <div class="totals-left">
-                <div class="total-row">
-                  <span>Total Quantity:</span>
-                  <span>${totalItems} units</span>
-                </div>
+              <div class="total-item">
+                <span>Subtotal:</span>
+                <span>₹${subtotal.toLocaleString('en-IN')}</span>
               </div>
-              <div class="totals-right">
-                <div class="total-row">
-                  <span>Subtotal:</span>
-                  <span>₹${subtotal.toLocaleString('en-IN')}</span>
-                </div>
-                <div class="total-row">
-                  <span>GST (5% included):</span>
-                  <span>₹${gst.toLocaleString('en-IN')}</span>
-                </div>
-                <div class="total-row grand">
-                  <span>Total:</span>
-                  <span class="grand-total">₹${total.toLocaleString('en-IN')}</span>
-                </div>
+              <div class="total-item">
+                <span>GST (5% included):</span>
+                <span>₹${gst.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="total-item grand">
+                <span>Total:</span>
+                <span>₹${total.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>

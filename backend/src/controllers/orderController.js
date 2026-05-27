@@ -3,21 +3,11 @@ import Product from '../models/Product.js';
 import { ApiError, sendSuccess, sendError } from '../utils/apiResponse.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/appConstants.js';
 import { logger } from '../utils/logger.js';
-import sendEmail from '../utils/sendEmail.js';
 
-// Generate a unique 5-digit order number (e.g. ORD-04237)
-const generateOrderNumber = async () => {
-  const maxAttempts = 10;
-  for (let i = 0; i < maxAttempts; i++) {
-    const num = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    const orderNum = `ORD-${num}`;
-    // ensure uniqueness
-    // Order model is declared below in this file; use it to check collisions
-    const exists = await Order.findOne({ orderNumber: orderNum });
-    if (!exists) return orderNum;
-  }
-  // fallback to timestamp-derived 5 digits
-  return `ORD-${Date.now().toString().slice(-5)}`;
+const generateOrderNumber = () => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  return `ORD-${timestamp}-${random}`;
 };
 
 /**
@@ -47,7 +37,7 @@ export const createOrder = async (req, res, next) => {
 
     // Create order
     const order = await Order.create({
-      orderNumber: await generateOrderNumber(),
+      orderNumber: generateOrderNumber(),
       user: req.user.id,
       items: items.map(item => ({
         productId: item.productId || item.id,
@@ -344,28 +334,6 @@ export const getAllOrders = async (req, res, next) => {
 
   } catch (error) {
     logger.error('Error fetching all orders', { error: error.message });
-    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
-  }
-};
-
-/**
- * Delete order (Admin only)
- * DELETE /api/orders/:id
- */
-export const deleteOrder = async (req, res, next) => {
-  try {
-    const order = await Order.findByIdAndDelete(req.params.id);
-
-    if (!order) {
-      logger.warn('Order not found for deletion', { orderId: req.params.id });
-      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
-    }
-
-    logger.info('Order deleted', { orderId: req.params.id, userId: req.user.id });
-    return sendSuccess(res, 'Order deleted successfully', { orderId: req.params.id });
-
-  } catch (error) {
-    logger.error('Error deleting order', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };

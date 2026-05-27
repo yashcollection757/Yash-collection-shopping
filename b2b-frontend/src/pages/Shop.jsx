@@ -391,10 +391,11 @@ const Shop = () => {
                     ? Math.max(...product.variants.map(v => v.price))
                     : 0;
                   const onSale = product.variants?.some(v => v.originalPrice > v.price);
+                  const hasStock = product.variants?.some(v => v.quantity > 0);
 
                   return (
                     <div key={product._id}
-                      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-cyan-200 hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                      className={`group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-cyan-200 hover:shadow-2xl transition-all duration-300 cursor-pointer ${!hasStock ? 'opacity-60' : ''}`}
                       onClick={() => navigate(`/product/${product._id}`)}>
 
                       {/* Image Container */}
@@ -405,7 +406,12 @@ const Shop = () => {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={e => { e.target.src = '/images/pro1.jpeg'; }}
                         />
-                        {onSale && (
+                        {!hasStock && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <span className="text-white font-bold text-lg px-4 py-2 bg-red-600 rounded-lg">OUT OF STOCK</span>
+                          </div>
+                        )}
+                        {onSale && hasStock && (
                           <div className="absolute top-4 right-4 bg-brand-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-pulse">
                             SALE
                           </div>

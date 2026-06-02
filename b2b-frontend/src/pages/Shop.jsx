@@ -401,11 +401,16 @@ const Shop = () => {
                       {/* Image Container */}
                       <div className="relative bg-gradient-to-br from-gray-50 via-gray-80 to-gray-100 aspect-[450/560] overflow-hidden">
                         <img
-                          src={product.image || '/images/pro1.jpeg'}
+                          src={product.images?.[0] || product.image || '/images/pro1.jpeg'}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={e => { e.target.src = '/images/pro1.jpeg'; }}
                         />
+                        {product.images && product.images.length > 1 && (
+                          <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-semibold">
+                            +{product.images.length - 1}
+                          </div>
+                        )}
                         {!hasStock && (
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                             <span className="text-white font-bold text-lg px-4 py-2 bg-red-600 rounded-lg">OUT OF STOCK</span>

@@ -3,11 +3,11 @@ import Product from '../models/Product.js';
 import { ApiError, sendSuccess, sendError } from '../utils/apiResponse.js';
 import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/appConstants.js';
 import { logger } from '../utils/logger.js';
+import sendEmail from '../utils/sendEmail.js';
 
 const generateOrderNumber = () => {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000);
-  return `ORD-${timestamp}-${random}`;
+  const random = Math.floor(Math.random() * 90000) + 10000; // 5 digits: 10000-99999
+  return `ORD-${random}`;
 };
 
 /**
@@ -18,6 +18,9 @@ const generateOrderNumber = () => {
 export const createOrder = async (req, res, next) => {
   try {
     const { shippingAddress, paymentMethod, items, subtotal, shipping, total, orderNote } = req.body;
+    
+    // Get user ID - handle both authenticated and guest users
+    const userId = req.user?.id || null;
 
     // Validate input
     if (!shippingAddress || !paymentMethod) {
@@ -38,7 +41,7 @@ export const createOrder = async (req, res, next) => {
     // Create order
     const order = await Order.create({
       orderNumber: generateOrderNumber(),
-      user: req.user.id,
+      user: userId,
       items: items.map(item => ({
         productId: item.productId || item.id,
         name: item.name,
@@ -79,7 +82,8 @@ export const createOrder = async (req, res, next) => {
       }
     }
 
-    logger.info('Order created successfully', { orderId: order._id, orderNumber: order.orderNumber, userId: req.user.id });
+    logger.info('Order created successfully', { orderId: order._id, orderNumber: order.orderNumber, userId });
+    
 
     // Send Order Confirmation Email
     if (shippingAddress.email) {
@@ -159,7 +163,7 @@ export const createOrder = async (req, res, next) => {
     return sendSuccess(res, SUCCESS_MESSAGES.ORDER_CREATED, { order }, HTTP_STATUS.CREATED);
 
   } catch (error) {
-    logger.error('Error creating order', { error: error.message, userId: req.user.id });
+    logger.error('Error creating order', { error: error.message, userId: req.user?.id, stack: error.stack });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };
@@ -187,6 +191,170 @@ export const getMyOrders = async (req, res, next) => {
 };
 
 /**
+ * Update order status (admin only)
+ * PUT /api/orders/:id/status
+ * Body: { orderStatus }
+ */
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { orderStatus } = req.body;
+
+    if (!orderStatus) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, 'Order status is required');
+    }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
+    }
+
+    const previousStatus = order.orderStatus;
+    order.orderStatus = orderStatus;
+    await order.save();
+
+    logger.info('Order status updated', { orderId: id, previousStatus, newStatus: orderStatus });
+
+    // Send email notification when order is shipped
+    if (orderStatus === 'shipped' && order.shippingAddress?.email) {
+      const itemsHtml = order.items.map(item => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5edf2;">
+            <span style="color:#1b2f3e;font-weight:600;font-size:14px;">${item.name}</span>
+            <br/><span style="color:#70a0b5;font-size:12px;">Size: ${item.size || '—'} &nbsp;|&nbsp; Qty: ${item.quantity}</span>
+          </td>
+          <td style="padding:10px 0;border-bottom:1px solid #e5edf2;text-align:right;color:#1b2f3e;font-weight:700;font-size:14px;">
+            ₹${(item.price * item.quantity).toLocaleString('en-IN')}
+          </td>
+        </tr>
+      `).join('');
+
+      sendEmail({
+        email: order.shippingAddress.email,
+        subject: `Order Shipped – ${order.orderNumber} | Yash Collections`,
+        html: `
+          <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:32px;text-align:center;">
+              <h1 style="color:#1dbbcc;margin:0;font-size:26px;letter-spacing:-0.5px;">Yash Collections</h1>
+              <p style="color:rgba(255,255,255,0.6);margin:5px 0 0;font-size:12px;">B2B Wholesale Portal</p>
+            </div>
+            <div style="padding:32px;">
+              <h2 style="color:#1b2f3e;margin:0 0 6px;">Order Shipped! 📦</h2>
+              <p style="color:#3e6b82;font-size:15px;margin:0 0 20px;">Hi <strong>${order.shippingAddress.name}</strong>, your order is on its way to you.</p>
+
+              <div style="background:rgba(29,187,204,0.08);border:1px solid rgba(29,187,204,0.25);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+                <span style="font-size:22px;">🚚</span>
+                <div>
+                  <p style="margin:0;color:#1b2f3e;font-size:14px;font-weight:700;">Status: Shipped</p>
+                  <p style="margin:4px 0 0;color:#3e6b82;font-size:13px;">Your order is en route. Track your delivery for real-time updates.</p>
+                </div>
+              </div>
+
+              <div style="background:white;border:1px solid #e5edf2;border-radius:12px;padding:20px;margin-bottom:20px;">
+                <p style="margin:0 0 12px;color:#1b2f3e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Order Details</p>
+                <p style="margin:0 0 6px;color:#70a0b5;font-size:13px;">Order ID: <strong style="color:#1b2f3e;">${order.orderNumber}</strong></p>
+                <p style="margin:0;color:#70a0b5;font-size:13px;">Payment: <strong style="color:#1b2f3e;">${order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod}</strong></p>
+              </div>
+
+              <div style="background:white;border:1px solid #e5edf2;border-radius:12px;padding:20px;margin-bottom:20px;">
+                <p style="margin:0 0 12px;color:#1b2f3e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Items Shipped</p>
+                <table style="width:100%;border-collapse:collapse;">
+                  ${itemsHtml}
+                </table>
+                <div style="margin-top:14px;padding-top:14px;border-top:2px solid #e5edf2;">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="color:#70a0b5;font-size:13px;">Subtotal</span>
+                    <span style="color:#1b2f3e;font-size:13px;">₹${order.subtotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;">
+                    <span style="color:#70a0b5;font-size:13px;">Shipping</span>
+                    <span style="color:#1b2f3e;font-size:13px;">${order.shipping === 0 ? 'FREE' : '₹' + order.shipping}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #e5edf2;">
+                    <span style="color:#1b2f3e;font-size:15px;font-weight:800;">Total</span>
+                    <span style="color:#1dbbcc;font-size:15px;font-weight:800;">₹${order.totalPrice.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:white;border:1px solid #e5edf2;border-radius:12px;padding:20px;">
+                <p style="margin:0 0 8px;color:#1b2f3e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Shipping To</p>
+                <p style="margin:0;color:#3e6b82;font-size:14px;line-height:1.7;">${order.shippingAddress.name}<br/>${order.shippingAddress.address || ''}, ${order.shippingAddress.city || ''}<br/>${order.shippingAddress.state || ''} - ${order.shippingAddress.pincode || ''}<br/>📞 ${order.shippingAddress.phone || ''}</p>
+              </div>
+            </div>
+            <div style="background:#f0f5f8;padding:18px 32px;border-top:1px solid #e5edf2;text-align:center;">
+              <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
+            </div>
+          </div>
+        `
+      }).catch(err => logger.error('Failed to send shipping email', { error: err.message }));
+    }
+
+    // Send email notification when order is delivered
+    if (orderStatus === 'delivered' && previousStatus !== 'delivered' && order.shippingAddress?.email) {
+      const itemsHtml = order.items.map(item => `
+        <tr>
+          <td style="padding:8px 0;border-bottom:1px solid #e5edf2;">
+            <span style="color:#1b2f3e;font-weight:600;font-size:13px;">${item.name}</span>
+            <br/><span style="color:#70a0b5;font-size:12px;">Size: ${item.size || '—'} &nbsp;|&nbsp; Qty: ${item.quantity}</span>
+          </td>
+          <td style="padding:8px 0;border-bottom:1px solid #e5edf2;text-align:right;color:#1b2f3e;font-weight:700;font-size:13px;">
+            ₹${(item.price * item.quantity).toLocaleString('en-IN')}
+          </td>
+        </tr>
+      `).join('');
+
+      sendEmail({
+        email: order.shippingAddress.email,
+        subject: `Order Delivered – ${order.orderNumber} | Yash Collections`,
+        html: `
+          <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:32px;text-align:center;">
+              <h1 style="color:#1dbbcc;margin:0;font-size:26px;letter-spacing:-0.5px;">Yash Collections</h1>
+              <p style="color:rgba(255,255,255,0.6);margin:5px 0 0;font-size:12px;">B2B Wholesale Portal</p>
+            </div>
+            <div style="padding:32px;text-align:center;">
+              <div style="width:72px;height:72px;background:rgba(34,197,94,0.12);border:2px solid rgba(34,197,94,0.3);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                <span style="font-size:34px;">✅</span>
+              </div>
+              <h2 style="color:#1b2f3e;margin:0 0 8px;">Order Delivered!</h2>
+              <p style="color:#3e6b82;font-size:15px;margin:0 0 24px;">Hi <strong>${order.shippingAddress.name}</strong>, your order has been successfully delivered. Thank you for shopping with us!</p>
+
+              <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;">
+                <p style="margin:0;color:#1b2f3e;font-size:13px;font-weight:700;">Order ID: ${order.orderNumber}</p>
+                <p style="margin:6px 0 0;color:#3e6b82;font-size:13px;">Status: <strong style="color:#22c55e;">Delivered ✅</strong></p>
+              </div>
+
+              <div style="background:white;border:1px solid #e5edf2;border-radius:12px;padding:20px;margin-bottom:20px;text-align:left;">
+                <p style="margin:0 0 12px;color:#1b2f3e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Items Delivered</p>
+                <table style="width:100%;border-collapse:collapse;">
+                  ${itemsHtml}
+                </table>
+                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e5edf2;display:flex;justify-content:space-between;">
+                  <span style="color:#1b2f3e;font-weight:800;font-size:14px;">Total Paid</span>
+                  <span style="color:#1dbbcc;font-weight:800;font-size:14px;">₹${order.totalPrice.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <p style="color:#70a0b5;font-size:13px;text-align:left;">If you have any questions about your order, feel free to contact us.</p>
+            </div>
+            <div style="background:#f0f5f8;padding:18px 32px;border-top:1px solid #e5edf2;text-align:center;">
+              <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
+            </div>
+          </div>
+        `
+      }).catch(err => logger.error('Failed to send delivered email', { error: err.message }));
+    }
+
+    return sendSuccess(res, 'Order status updated successfully', { order });
+
+  } catch (error) {
+    logger.error('Error updating order status', { error: error.message, orderId: req.params.id });
+    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
+  }
+};
+
+/**
  * Get order by ID
  * GET /api/orders/:id
  */
@@ -209,93 +377,6 @@ export const getOrderById = async (req, res, next) => {
 
   } catch (error) {
     logger.error('Error fetching order', { error: error.message });
-    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
-  }
-};
-
-/**
- * Update order status (Admin only)
- * PUT /api/orders/:id/status
- */
-export const updateOrderStatus = async (req, res, next) => {
-  try {
-    const { orderStatus, paymentStatus } = req.body;
-
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      logger.warn('Order not found for status update', { orderId: req.params.id });
-      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
-    }
-
-    const oldStatus = order.orderStatus;
-
-    if (orderStatus) order.orderStatus = orderStatus;
-    if (paymentStatus) order.paymentStatus = paymentStatus;
-
-    await order.save();
-
-    // Send Delivered Email if status changed to delivered
-    if (orderStatus === 'delivered' && oldStatus !== 'delivered' && order.shippingAddress && order.shippingAddress.email) {
-      const deliveredItemsHtml = order.items.map(item => `
-        <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #e5edf2;">
-            <span style="color:#1b2f3e;font-weight:600;font-size:13px;">${item.name}</span>
-            <br/><span style="color:#70a0b5;font-size:12px;">Size: ${item.size || '—'} &nbsp;|&nbsp; Qty: ${item.quantity}</span>
-          </td>
-          <td style="padding:8px 0;border-bottom:1px solid #e5edf2;text-align:right;color:#1b2f3e;font-weight:700;font-size:13px;">
-            ₹${(item.price * item.quantity).toLocaleString('en-IN')}
-          </td>
-        </tr>
-      `).join('');
-
-      sendEmail({
-        email: order.shippingAddress.email,
-        subject: `✅ Order Delivered – ${order.orderNumber} | Yash Collections`,
-        html: `
-          <div style="font-family:'Inter','Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f8fbfc;border:1px solid #e5edf2;border-radius:16px;overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#1b2f3e,#0d3d4a);padding:32px;text-align:center;">
-              <h1 style="color:#1dbbcc;margin:0;font-size:26px;letter-spacing:-0.5px;">Yash Collections</h1>
-              <p style="color:rgba(255,255,255,0.6);margin:5px 0 0;font-size:12px;">B2B Wholesale Portal</p>
-            </div>
-            <div style="padding:32px;text-align:center;">
-              <div style="width:72px;height:72px;background:rgba(34,197,94,0.12);border:2px solid rgba(34,197,94,0.3);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
-                <span style="font-size:34px;">✅</span>
-              </div>
-              <h2 style="color:#1b2f3e;margin:0 0 8px;">Order Delivered!</h2>
-              <p style="color:#3e6b82;font-size:15px;margin:0 0 24px;">Hi <strong>${order.shippingAddress.name}</strong>, your order has been successfully delivered. Thank you for shopping with us!</p>
-
-              <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;">
-                <p style="margin:0;color:#1b2f3e;font-size:13px;font-weight:700;">Order ID: ${order.orderNumber}</p>
-                <p style="margin:6px 0 0;color:#3e6b82;font-size:13px;">Status: <strong style="color:#22c55e;">Delivered 📦</strong></p>
-              </div>
-
-              <div style="background:white;border:1px solid #e5edf2;border-radius:12px;padding:20px;margin-bottom:20px;text-align:left;">
-                <p style="margin:0 0 12px;color:#1b2f3e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Items Delivered</p>
-                <table style="width:100%;border-collapse:collapse;">
-                  ${deliveredItemsHtml}
-                </table>
-                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e5edf2;display:flex;justify-content:space-between;">
-                  <span style="color:#1b2f3e;font-weight:800;font-size:14px;">Total Paid</span>
-                  <span style="color:#1dbbcc;font-weight:800;font-size:14px;">₹${order.totalPrice.toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              <p style="color:#70a0b5;font-size:13px;text-align:left;">If you have any questions about your order, feel free to contact us.</p>
-            </div>
-            <div style="background:#f0f5f8;padding:18px 32px;border-top:1px solid #e5edf2;text-align:center;">
-              <p style="margin:0;color:#70a0b5;font-size:12px;">© 2024 Yash Collections. All rights reserved.</p>
-            </div>
-          </div>
-        `
-      }).catch(err => logger.error('Failed to send order delivered email', { error: err.message }));
-    }
-
-    logger.info('Order status updated', { orderId: order._id, orderStatus, paymentStatus });
-    return sendSuccess(res, 'Order updated successfully', { order });
-
-  } catch (error) {
-    logger.error('Error updating order status', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };
@@ -334,6 +415,36 @@ export const getAllOrders = async (req, res, next) => {
 
   } catch (error) {
     logger.error('Error fetching all orders', { error: error.message });
+    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
+  }
+};
+
+/**
+ * Delete order
+ * DELETE /api/orders/:id
+ */
+export const deleteOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return sendError(res, HTTP_STATUS.NOT_FOUND, 'Order not found');
+    }
+
+    // Check if user owns the order or is admin
+    if (order.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return sendError(res, HTTP_STATUS.FORBIDDEN, 'You do not have permission to delete this order');
+    }
+
+    await Order.findByIdAndDelete(id);
+
+    logger.info('Order deleted successfully', { orderId: id, userId: req.user.id });
+
+    return sendSuccess(res, 'Order deleted successfully', { orderId: id });
+
+  } catch (error) {
+    logger.error('Error deleting order', { error: error.message, userId: req.user.id });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };

@@ -5,10 +5,14 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getAllProductsAdmin,
 } from '../controllers/productController.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const router = express.Router();
+
+// Admin endpoint - returns all products including inactive ones
+router.get('/admin/all', asyncHandler(getAllProductsAdmin));
 
 router.get('/', asyncHandler(getAllProducts));
 router.get('/:id', asyncHandler(getProductById));

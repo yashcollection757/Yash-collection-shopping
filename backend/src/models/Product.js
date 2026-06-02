@@ -19,6 +19,11 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '/images/default.jpeg',
     },
+    images: [
+      {
+        type: String,
+      },
+    ],
     variants: [
       {
         size: {

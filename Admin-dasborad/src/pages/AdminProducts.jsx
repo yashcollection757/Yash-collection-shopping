@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddProductModal from '../components/AddProductModal';
-import { fetchAllProducts, deleteProduct } from '../services/api';
+import { fetchAllProducts, deleteProduct, updateProduct } from '../services/api';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -37,6 +37,17 @@ export default function AdminProducts() {
       setShowDeleteConfirm(null);
     } catch (err) {
       alert('Failed to delete product');
+    }
+  };
+
+  const handleToggleVisibility = async (productId, currentStatus) => {
+    try {
+      await updateProduct(productId, { isActive: !currentStatus });
+      setProducts(products.map(p => 
+        p._id === productId ? { ...p, isActive: !currentStatus } : p
+      ));
+    } catch (err) {
+      alert('Failed to update product visibility');
     }
   };
 
@@ -181,6 +192,14 @@ export default function AdminProducts() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex gap-2 justify-center">
+                            <button 
+                              onClick={() => handleToggleVisibility(p._id, p.isActive)}
+                              className="px-3 py-1 rounded text-xs font-bold text-white transition-all"
+                              style={{ background: p.isActive ? '#10b981' : '#9ca3af' }}
+                              title={p.isActive ? 'Hide from website' : 'Show on website'}
+                            >
+                              {p.isActive ? '👁 Visible' : '👁‍🗨 Hidden'}
+                            </button>
                             <button 
                               onClick={() => {
                                 setEditingProduct(p);

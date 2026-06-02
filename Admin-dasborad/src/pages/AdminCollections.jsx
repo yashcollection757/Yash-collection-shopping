@@ -88,8 +88,8 @@ export default function AdminCollections() {
       return;
     }
 
-    // Size check — 300 KB
-    const MAX_KB = 300;
+    // Size check — 150 KB
+    const MAX_KB = 150;
     if (file.size > MAX_KB * 1024) {
       setSaveError(`Image must be less than ${MAX_KB} KB. Your file is ${(file.size / 1024).toFixed(0)} KB.`);
       e.target.value = '';
@@ -317,7 +317,7 @@ export default function AdminCollections() {
                       <p className="text-sm font-semibold" style={{ color: '#70a0b5' }}>
                         Click to upload image
                       </p>
-                      <p className="text-xs mt-1" style={{ color: '#b0c4d0' }}>JPG, JPEG, PNG only — size: 150KB - 300KB</p>
+                      <p className="text-xs mt-1" style={{ color: '#b0c4d0' }}>JPG, JPEG, PNG only — size: 150KB max</p>
                     </div>
                   )}
                 </div>

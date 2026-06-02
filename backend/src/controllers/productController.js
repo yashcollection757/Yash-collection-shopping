@@ -68,6 +68,53 @@ export const getAllProducts = async (req, res, next) => {
 };
 
 /**
+ * Get all products for admin (including inactive)
+ * GET /api/products/admin/all
+ */
+export const getAllProductsAdmin = async (req, res, next) => {
+  try {
+    const { category, search, page = 1, limit = API_CONSTANTS.ITEMS_PER_PAGE } = req.query;
+
+    let filter = {}; // No isActive filter - show all products
+
+    // Category filter
+    if (category && category.trim()) {
+      filter.category = category.trim();
+    }
+
+    // Search filter
+    if (search && search.trim()) {
+      filter.$or = [
+        { name: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } },
+      ];
+    }
+
+    const products = await Product.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    const totalCount = await Product.countDocuments(filter);
+
+    logger.info('Admin: All products fetched', { count: products.length, filters: { category, search } });
+
+    return sendSuccess(res, 'All products retrieved successfully', {
+      count: products.length,
+      total: totalCount,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(totalCount / parseInt(limit)),
+      products: products,
+    });
+
+  } catch (error) {
+    logger.error('Error fetching products for admin', { error: error.message });
+    next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
+  }
+};
+
+/**
  * Get product by ID
  * GET /api/products/:id
  */
@@ -96,7 +143,7 @@ export const getProductById = async (req, res, next) => {
  */
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, description, category, image, variants, volumePricing } = req.body;
+    const { name, description, category, image, images, variants, volumePricing } = req.body;
 
     // Validate input
     const errors = validateProductInput({
@@ -121,7 +168,8 @@ export const createProduct = async (req, res, next) => {
       name: name.trim(),
       description: description.trim(),
       category: category.trim(),
-      image,
+      image: image || (images && images[0]) || '/images/default.jpeg',
+      images: images && images.length > 0 ? images : (image ? [image] : []),
       variants: variants.map(v => ({
         size: v.size.trim(),
         price: parseFloat(v.price),
@@ -154,7 +202,7 @@ export const createProduct = async (req, res, next) => {
  */
 export const updateProduct = async (req, res, next) => {
   try {
-    const { name, description, category, image, variants, volumePricing, isActive } = req.body;
+    const { name, description, category, image, images, variants, volumePricing, isActive } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -167,7 +215,16 @@ export const updateProduct = async (req, res, next) => {
     if (name) product.name = name.trim();
     if (description) product.description = description.trim();
     if (category) product.category = category.trim();
-    if (image) product.image = image;
+    
+    // Handle images: prefer images array, fallback to single image
+    if (images && images.length > 0) {
+      product.images = images;
+      product.image = images[0];
+    } else if (image) {
+      product.image = image;
+      product.images = [image];
+    }
+    
     if (volumePricing !== undefined) product.volumePricing = volumePricing;
     if (isActive !== undefined) product.isActive = isActive;
 

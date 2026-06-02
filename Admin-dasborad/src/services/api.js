@@ -31,7 +31,7 @@ export const deleteUserAdmin = async (id) => {
 
 /* ─── Products ─── */
 export const fetchAllProducts = async () => {
-  const response = await fetch(`${API_BASE_URL}/products`, {
+  const response = await fetch(`${API_BASE_URL}/products/admin/all`, {
     headers: authHeaders(),
   });
   if (!response.ok) throw new Error('Failed to fetch products');

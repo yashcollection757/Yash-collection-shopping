@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { uploadImage, createProduct, updateProduct } from '../services/api';
 
 const CATEGORIES = ['GRS', 'OPEN', 'CORD SET', 'GRS CAP', 'JKT', 'DORI', 'GRS RN', 'GIFT SET', 'U CHOICE'];
-const MAX_IMAGE_KB = 300;
+const MAX_IMAGE_KB = 150;
+const MAX_IMAGES = 3;
 
 const defaultVariant = () => ({ size: '', price: '', originalPrice: '', quantity: '' });
 
@@ -12,6 +13,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
     newCategory: '',
     name: '',
     description: '',
+    images: [],
     image: '',
   });
 
@@ -21,19 +23,23 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
   const [uploading, setUploading] = useState(false);
   const [error, setError]         = useState(null);
   const [uploadError, setUploadError] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       if (productToEdit) {
+        const editImages = productToEdit.images && productToEdit.images.length > 0 
+          ? productToEdit.images 
+          : (productToEdit.image ? [productToEdit.image] : []);
         setFormData({
           category: productToEdit.category || 'GRS',
           newCategory: '',
           name: productToEdit.name || '',
           description: productToEdit.description || '',
-          image: productToEdit.image || '',
+          images: editImages,
+          image: editImages[0] || '',
         });
-        setImagePreview(productToEdit.image || null);
+        setImagePreviews(editImages);
         
         if (productToEdit.variants && productToEdit.variants.length > 0) {
           const mappedVars = productToEdit.variants.map(v => ({
@@ -46,9 +52,9 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
         }
       } else {
         // Reset to default
-        setFormData({ category: 'GRS', newCategory: '', name: '', description: '', image: '' });
+        setFormData({ category: 'GRS', newCategory: '', name: '', description: '', images: [], image: '' });
         setVariants([ defaultVariant() ]);
-        setImagePreview(null);
+        setImagePreviews([]);
       }
       setError(null);
       setUploadError(null);
@@ -76,31 +82,61 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
   const removeVariantRow = (index) =>
     setVariants(prev => prev.filter((_, i) => i !== index));
 
-  /* ─── Image Upload (size: 150KB - 300KB) ─── */
+  /* ─── Image Upload (3 images, 150KB each) ─── */
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    // Size check
-    if (file.size > MAX_IMAGE_KB * 1024) {
-      setUploadError(`Image must be less than ${MAX_IMAGE_KB} KB. Your file is ${(file.size / 1024).toFixed(0)} KB.`);
+    // Check total count
+    if (imagePreviews.length + files.length > MAX_IMAGES) {
+      setUploadError(`Maximum ${MAX_IMAGES} images allowed. You already have ${imagePreviews.length}.`);
       e.target.value = '';
       return;
     }
 
+    // Check size for each file
+    for (const file of files) {
+      if (file.size > MAX_IMAGE_KB * 1024) {
+        setUploadError(`Each image must be less than ${MAX_IMAGE_KB} KB. "${file.name}" is ${(file.size / 1024).toFixed(0)} KB.`);
+        e.target.value = '';
+        return;
+      }
+    }
+
     setUploadError(null);
-    setImagePreview(URL.createObjectURL(file));
 
     try {
       setUploading(true);
-      const imageUrl = await uploadImage(file);
-      setFormData(prev => ({ ...prev, image: imageUrl }));
+      const newPreviews = [...imagePreviews];
+
+      for (const file of files) {
+        const imageUrl = await uploadImage(file);
+        newPreviews.push(imageUrl);
+      }
+
+      setImagePreviews(newPreviews);
+      setFormData(prev => ({ 
+        ...prev, 
+        images: newPreviews,
+        image: newPreviews[0] || prev.image
+      }));
+      e.target.value = '';
     } catch (err) {
       setUploadError(err.message || 'Image upload failed. Please try again.');
-      setImagePreview(null);
     } finally {
       setUploading(false);
     }
+  };
+
+  /* ─── Remove Image ─── */
+  const removeImage = (index) => {
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setImagePreviews(newPreviews);
+    setFormData(prev => ({
+      ...prev,
+      images: newPreviews,
+      image: newPreviews[0] || ''
+    }));
   };
 
   /* ─── Submit ─── */
@@ -109,7 +145,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
     setError(null);
 
     if (!formData.name.trim()) { setError('Product name is required.'); return; }
-    if (!formData.image) { setError('Please upload a product image.'); return; }
+    if (imagePreviews.length === 0) { setError('Please upload at least one product image.'); return; }
     if (!formData.description.trim()) { setError('Description is required.'); return; }
 
     let finalCategory = formData.category;
@@ -139,6 +175,8 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
         ...formData,
         category: finalCategory,
         volumePricing,
+        images: imagePreviews,
+        image: imagePreviews[0] || '',
         variants: filledVariants.map(v => ({
           size: v.size,
           price: Number(v.price),
@@ -273,39 +311,74 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
             </div>
           </div>
 
-          {/* 6. Image Upload — size: 150KB - 300KB, JPG/JPEG/PNG only */}
+          {/* 6. Image Upload — 3 images max, 150KB each */}
           <div>
-            <label className={lbl}>Product Image * <span className="font-normal text-gray-400">(size: 150KB - 300KB · JPG / JPEG / PNG)</span></label>
+            <label className={lbl}>Product Images * <span className="font-normal text-gray-400">(max {MAX_IMAGES} images · {MAX_IMAGE_KB}KB each · JPG/JPEG/PNG)</span></label>
 
-            <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition ${
-              uploading ? 'border-cyan-400 bg-cyan-50' : 'border-gray-300 hover:border-cyan-400 hover:bg-cyan-50'
-            }`}>
-              {uploading ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm text-cyan-600 font-medium">Uploading…</span>
-                </div>
-              ) : imagePreview ? (
-                <img src={imagePreview} alt="preview" className="h-full w-full object-contain p-2 rounded-xl" />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-400">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-sm font-medium">Click to upload image</span>
-                  <span className="text-xs">Max size: {MAX_IMAGE_KB} KB</span>
-                </div>
-              )}
-              <input type="file" accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png" onChange={handleImageUpload}
-                disabled={uploading} className="hidden" />
-            </label>
+            {/* Image Preview Grid */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {imagePreviews.map((preview, idx) => (
+                  <div key={idx} className="relative group">
+                    <img src={preview} alt={`preview-${idx}`} className="w-full h-24 object-cover rounded-lg border border-gray-200" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg transition flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition text-lg font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {idx === 0 && (
+                      <div className="absolute top-2 left-2 bg-cyan-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                        Primary
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2 bg-gray-900/80 text-white text-xs px-2 py-1 rounded font-semibold">
+                      {idx + 1}/{imagePreviews.length}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload Area - only show if less than 3 images */}
+            {imagePreviews.length < MAX_IMAGES && (
+              <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition ${
+                uploading ? 'border-cyan-400 bg-cyan-50' : 'border-gray-300 hover:border-cyan-400 hover:bg-cyan-50'
+              }`}>
+                {uploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-6 h-6 border-3 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-cyan-600 font-medium">Uploading…</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-gray-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Click to add image ({imagePreviews.length}/{MAX_IMAGES})</span>
+                    <span className="text-xs">Max {MAX_IMAGE_KB} KB per image</span>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png" 
+                  onChange={handleImageUpload}
+                  multiple
+                  disabled={uploading || imagePreviews.length >= MAX_IMAGES}
+                  className="hidden" 
+                />
+              </label>
+            )}
 
             {uploadError && (
               <p className="text-sm text-red-600 font-semibold mt-2 px-1 text-center bg-red-50 rounded py-1">{uploadError}</p>
             )}
 
-            {formData.image && !uploading && !uploadError && (
-              <p className="text-xs text-green-600 font-semibold mt-1">✓ Image uploaded successfully</p>
+            {imagePreviews.length > 0 && !uploading && !uploadError && (
+              <p className="text-xs text-green-600 font-semibold mt-2">✓ {imagePreviews.length} image{imagePreviews.length > 1 ? 's' : ''} uploaded</p>
             )}
           </div>
 

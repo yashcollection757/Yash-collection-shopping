@@ -11,8 +11,10 @@ const ProductDetail = () => {
   const [product, setProduct]               = useState(null);
   const [loading, setLoading]               = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantities, setQuantities]         = useState({});
   const [toast, setToast]                   = useState(null);
+  const [previewImage, setPreviewImage]     = useState(null);
 
   /* ── Fetch product from backend ── */
   const fetchProduct = async () => {
@@ -193,6 +195,9 @@ const ProductDetail = () => {
   }
 
   const variant      = product.variants[selectedVariant] || product.variants[0];
+  const allImages    = product.images && product.images.length > 0 
+    ? product.images 
+    : (product.image ? [product.image] : ['/images/pro1.jpeg']);
   const totalQty     = product.variants.reduce((sum, v) => sum + (quantities[v._id] || 0), 0);
   const totalAmount  = product.variants.reduce((sum, v) => sum + (quantities[v._id] || 0) * v.price, 0);
   const hasQty       = totalQty > 0;
@@ -233,16 +238,50 @@ const ProductDetail = () => {
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
-          {/* Image */}
-          <div className="flex justify-center lg:justify-start">
-            <div className="relative bg-white rounded-2xl overflow-hidden w-full max-w-[550px] aspect-[5/4] shadow-sm border border-gray-100 flex items-center justify-center">
+          {/* Image Gallery */}
+          <div className="flex flex-col gap-4">
+            {/* Main Image */}
+            <div className="relative bg-white rounded-2xl overflow-hidden w-full max-w-[550px] aspect-[5/4] shadow-sm border border-gray-100 flex items-center justify-center cursor-pointer group"
+              onClick={() => setPreviewImage(allImages[selectedImageIndex])}>
               <img
-                src={variant?.image || product.image || '/images/pro1.jpeg'}
+                src={allImages[selectedImageIndex] || '/images/pro1.jpeg'}
                 alt={product.name}
-                className="absolute inset-0 w-full h-full object-contain p-2 transition-transform duration-700 hover:scale-105"
+                className="absolute inset-0 w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
                 onError={e => { e.target.src = '/images/pro1.jpeg'; }}
               />
+              <div className="absolute top-4 right-4 bg-white/90 text-gray-900 text-xs px-3 py-1 rounded-full font-semibold">
+                {selectedImageIndex + 1}/{allImages.length}
+              </div>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition rounded-2xl">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                </svg>
+              </div>
             </div>
+
+            {/* Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="flex gap-3">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`w-20 h-20 rounded-lg border-2 overflow-hidden transition-all ${
+                      selectedImageIndex === idx
+                        ? 'border-cyan-500 ring-2 ring-cyan-300 scale-105 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`thumbnail-${idx}`} 
+                      className="w-full h-full object-cover"
+                      onError={e => { e.target.src = '/images/pro1.jpeg'; }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}
@@ -412,6 +451,62 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            {/* Close button */}
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 bg-white hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition z-10 shadow-lg"
+            >
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Image */}
+            <div className="flex items-center justify-center h-full bg-gray-50 p-4">
+              <img
+                src={previewImage}
+                alt="preview"
+                className="max-w-full max-h-[80vh] object-contain"
+                onError={e => { e.target.src = '/images/pro1.jpeg'; }}
+              />
+            </div>
+
+            {/* Image counter */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-semibold">
+              {selectedImageIndex + 1} / {allImages.length}
+            </div>
+
+            {/* Navigation arrows */}
+            {allImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSelectedImageIndex((selectedImageIndex - 1 + allImages.length) % allImages.length)}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition shadow-lg z-20"
+                >
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setSelectedImageIndex((selectedImageIndex + 1) % allImages.length)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition shadow-lg z-20"
+                >
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

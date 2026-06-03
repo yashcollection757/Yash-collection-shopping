@@ -487,7 +487,11 @@ const ProductDetail = () => {
             {allImages.length > 1 && (
               <>
                 <button
-                  onClick={() => setSelectedImageIndex((selectedImageIndex - 1 + allImages.length) % allImages.length)}
+                  onClick={() => {
+                    const newIdx = (selectedImageIndex - 1 + allImages.length) % allImages.length;
+                    setSelectedImageIndex(newIdx);
+                    setPreviewImage(allImages[newIdx]);
+                  }}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition shadow-lg z-20"
                 >
                   <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,7 +499,11 @@ const ProductDetail = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => setSelectedImageIndex((selectedImageIndex + 1) % allImages.length)}
+                  onClick={() => {
+                    const newIdx = (selectedImageIndex + 1) % allImages.length;
+                    setSelectedImageIndex(newIdx);
+                    setPreviewImage(allImages[newIdx]);
+                  }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition shadow-lg z-20"
                 >
                   <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">

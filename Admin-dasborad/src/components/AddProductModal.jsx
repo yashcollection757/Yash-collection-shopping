@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { uploadImage, createProduct, updateProduct } from '../services/api';
 
 const CATEGORIES = ['GRS', 'OPEN', 'CORD SET', 'GRS CAP', 'JKT', 'DORI', 'GRS RN', 'GIFT SET', 'U CHOICE'];
-const MAX_IMAGE_KB = 150;
+const MAX_IMAGE_KB = 300;
 const MAX_IMAGES = 3;
 
 const defaultVariant = () => ({ size: '', price: '', originalPrice: '', quantity: '' });
@@ -82,7 +82,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
   const removeVariantRow = (index) =>
     setVariants(prev => prev.filter((_, i) => i !== index));
 
-  /* ─── Image Upload (3 images, 150KB each) ─── */
+  /* ─── Image Upload (3 images, 300KB each) ─── */
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -311,7 +311,7 @@ export default function AddProductModal({ isOpen, onClose, onProductAdded, produ
             </div>
           </div>
 
-          {/* 6. Image Upload — 3 images max, 150KB each */}
+          {/* 6. Image Upload — 3 images max, 300KB each */}
           <div>
             <label className={lbl}>Product Images * <span className="font-normal text-gray-400">(max {MAX_IMAGES} images · {MAX_IMAGE_KB}KB each · JPG/JPEG/PNG)</span></label>
 

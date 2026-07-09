@@ -2,22 +2,19 @@ import nodemailer from 'nodemailer';
 
 const sendEmail = async (options) => {
   console.log('[sendEmail] Sending to:', options.email);
-  console.log('[sendEmail] EMAIL_USER:', process.env.EMAIL_USER);
-  console.log('[sendEmail] EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,        // ← 465 ki jagah 587 (Render pe kaam karta hai)
+    secure: false,    // ← STARTTLS (SSL nahi)
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
-
-  // Verify connection before sending
-  await transporter.verify();
-  console.log('[sendEmail] ✅ Gmail SMTP connection verified');
 
   const info = await transporter.sendMail({
     from: `"Yash Collections B2B" <${process.env.EMAIL_USER}>`,

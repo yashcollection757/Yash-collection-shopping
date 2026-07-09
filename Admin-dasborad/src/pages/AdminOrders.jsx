@@ -188,6 +188,14 @@ export default function AdminOrders() {
             </div>
           </div>
           
+          <!-- Order Note / Special Instructions -->
+          ${order.orderNote ? `
+            <div style="border: 1px solid #333; padding: 10px; margin-bottom: 12px; font-size: 11px; background: #fffdf5; border-left: 4px solid #b45309;">
+              <div style="font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #b45309; font-size: 10px;">Order Note / Special Instructions</div>
+              <div>${order.orderNote}</div>
+            </div>
+          ` : ''}
+          
           <!-- Items Table -->
           <table class="items-table">
             <thead>

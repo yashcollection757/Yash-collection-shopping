@@ -88,7 +88,7 @@ const Shop = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/products`);
+        const res = await fetch(`${API_URL}/products?limit=1000`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         setProducts(data.data?.products || []);

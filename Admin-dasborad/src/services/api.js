@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yash-collections-backend.vercel.app/api' || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Returns clean token — strips "Bearer " if stored with prefix
 const getToken = () => {
@@ -31,7 +31,7 @@ export const deleteUserAdmin = async (id) => {
 
 /* ─── Products ─── */
 export const fetchAllProducts = async () => {
-  const response = await fetch(`${API_BASE_URL}/products/admin/all`, {
+  const response = await fetch(`${API_BASE_URL}/products/admin/all?limit=1000`, {
     headers: authHeaders(),
   });
   if (!response.ok) throw new Error('Failed to fetch products');

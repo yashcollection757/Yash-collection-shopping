@@ -18,7 +18,7 @@ const generateOrderNumber = () => {
 export const createOrder = async (req, res, next) => {
   try {
     const { shippingAddress, paymentMethod, items, subtotal, shipping, total, orderNote } = req.body;
-    
+
     // Get user ID - handle both authenticated and guest users
     const userId = req.user?.id || null;
 
@@ -83,7 +83,7 @@ export const createOrder = async (req, res, next) => {
     }
 
     logger.info('Order created successfully', { orderId: order._id, orderNumber: order.orderNumber, userId });
-    
+
 
     // Send Order Confirmation Email
     if (shippingAddress.email) {

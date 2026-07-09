@@ -11,8 +11,8 @@ import sendEmail from '../utils/sendEmail.js';
 const generateToken = (id, role) => {
   const expiry = role === 'admin' ? '7d' : '30d';
   return jwt.sign(
-    { id, role }, 
-    process.env.JWT_SECRET, 
+    { id, role },
+    process.env.JWT_SECRET,
     { expiresIn: expiry }
   );
 };
@@ -57,12 +57,12 @@ export const register = async (req, res, next) => {
 
   } catch (error) {
     logger.error('Signup error', { error: error.message });
-    
+
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return sendError(res, HTTP_STATUS.CONFLICT, `${field} already exists`);
     }
-    
+
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
   }
 };
@@ -84,7 +84,7 @@ export const login = async (req, res, next) => {
     // --- Admin Login (only ADMIN_EMAIL is allowed) ---
     const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
     const adminPassword = process.env.ADMIN_PASSWORD || '';
-    
+
     if (!adminEmail || !adminPassword) {
       logger.error('Admin credentials not configured in environment variables');
       return sendError(res, HTTP_STATUS.INTERNAL_ERROR, 'Admin authentication not configured');
@@ -131,7 +131,7 @@ export const login = async (req, res, next) => {
 
       const token = generateToken(adminUser._id, adminUser.role);
       logger.info('Admin logged in successfully', { email: adminEmail });
-      
+
       return sendSuccess(res, SUCCESS_MESSAGES.LOGIN_SUCCESS, {
         token: `${API_CONSTANTS.TOKEN_PREFIX}${token}`,
         user: {
@@ -318,7 +318,7 @@ export const updateUserStatus = async (req, res, next) => {
     await user.save();
 
     logger.info('User status updated', { userId: user._id, isVerified: user.isVerified, isActive: user.isActive });
-    
+
     // Send response IMMEDIATELY
     res.status(200).json({ success: true, message: 'User status updated successfully', data: { user } });
 
@@ -501,49 +501,50 @@ export const forgotPasswordOtp = async (req, res, next) => {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     user.otp = otp;
     user.otpExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save({ validateBeforeSave: false });
 
-    try {
-      console.log('[forgotPasswordOtp] Attempting to send OTP to:', email);
-      
-      await sendEmail({
-        email: user.email,
-        subject: 'Password Reset OTP - Yash Collections',
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5edf2; border-radius: 16px; background: #f8fbfc;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <div style="width: 56px; height: 56px; background: rgba(29,187,204,0.15); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;">
-                <span style="font-size: 28px;">🔐</span>
-              </div>
-            </div>
-            <h2 style="color: #1b2f3e; text-align: center; margin: 0 0 8px;">Password Reset OTP</h2>
-            <p style="color: #3e6b82; text-align: center; font-size: 14px; margin: 0 0 24px;">Yash Collections</p>
-            <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">Hi <strong>${user.name}</strong>, your One-Time Password (OTP) for password reset is:</p>
-            <div style="text-align: center; margin: 32px 0; padding: 20px; background: #e8f4f8; border-radius: 10px;">
-              <span style="font-size: 36px; font-weight: bold; color: #1dbbcc; letter-spacing: 6px;">${otp}</span>
-            </div>
-            <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">This OTP is valid for <strong>15 minutes</strong> only.</p>
-            <p style="color: #70a0b5; font-size: 13px; line-height: 1.5; margin-top: 24px;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>
-            <div style="border-top: 1px solid #e5edf2; margin-top: 24px; padding-top: 16px;">
-              <p style="color: #70a0b5; font-size: 12px; margin: 0;">Do not share this OTP with anyone.</p>
+    console.log('[forgotPasswordOtp] Attempting to send OTP to:', email);
+
+    // ✅ Response PEHLE bhejo — user ko wait nahi karna padega
+    sendSuccess(res, 'OTP has been sent to your email. Valid for 15 minutes.', { email: user.email });
+
+    // ✅ Email background mein bhejo (non-blocking)
+    sendEmail({
+      email: user.email,
+      subject: 'Password Reset OTP - Yash Collections',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5edf2; border-radius: 16px; background: #f8fbfc;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="width: 56px; height: 56px; background: rgba(29,187,204,0.15); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;">
+              <span style="font-size: 28px;">🔐</span>
             </div>
           </div>
-        `,
+          <h2 style="color: #1b2f3e; text-align: center; margin: 0 0 8px;">Password Reset OTP</h2>
+          <p style="color: #3e6b82; text-align: center; font-size: 14px; margin: 0 0 24px;">Yash Collections</p>
+          <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">Hi <strong>${user.name}</strong>, your One-Time Password (OTP) for password reset is:</p>
+          <div style="text-align: center; margin: 32px 0; padding: 20px; background: #e8f4f8; border-radius: 10px;">
+            <span style="font-size: 36px; font-weight: bold; color: #1dbbcc; letter-spacing: 6px;">${otp}</span>
+          </div>
+          <p style="color: #1b2f3e; font-size: 15px; line-height: 1.6;">This OTP is valid for <strong>15 minutes</strong> only.</p>
+          <p style="color: #70a0b5; font-size: 13px; line-height: 1.5; margin-top: 24px;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>
+          <div style="border-top: 1px solid #e5edf2; margin-top: 24px; padding-top: 16px;">
+            <p style="color: #70a0b5; font-size: 12px; margin: 0;">Do not share this OTP with anyone.</p>
+          </div>
+        </div>
+      `,
+    })
+      .then(() => {
+        console.log('[forgotPasswordOtp] ✅ OTP email sent successfully to:', user.email);
+        logger.info('Password reset OTP sent', { email: user.email });
+      })
+      .catch((emailErr) => {
+        console.error('[forgotPasswordOtp] ❌ Email send failed (OTP still valid in DB):', emailErr.message);
+        logger.error('Failed to send OTP email', { error: emailErr.message });
       });
-      console.log('[forgotPasswordOtp] ✅ OTP email sent successfully!');
-      logger.info('Password reset OTP sent', { email: user.email });
-      return sendSuccess(res, 'OTP has been sent to your email. Valid for 15 minutes.', { email: user.email });
-    } catch (emailErr) {
-      console.error('[forgotPasswordOtp] ❌ Email send failed:', emailErr.message);
-      user.otp = undefined;
-      user.otpExpire = undefined;
-      await user.save({ validateBeforeSave: false });
-      logger.error('Failed to send OTP email', { error: emailErr.message });
-      return sendError(res, HTTP_STATUS.INTERNAL_ERROR, 'Email could not be sent. Please try again.');
-    }
+
   } catch (error) {
     logger.error('Forgot password OTP error', { error: error.message });
     next(new ApiError(HTTP_STATUS.INTERNAL_ERROR, ERROR_MESSAGES.SERVER_ERROR));
@@ -663,7 +664,7 @@ export const deleteUser = async (req, res, next) => {
 export const testEmail = async (req, res, next) => {
   try {
     const { testEmail } = req.body;
-    
+
     if (!testEmail) {
       return sendError(res, HTTP_STATUS.BAD_REQUEST, 'testEmail is required');
     }

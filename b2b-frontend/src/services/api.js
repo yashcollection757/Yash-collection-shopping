@@ -1,5 +1,6 @@
 // API Base URL - change this based on environment
-const API_URL = import.meta.env.VITE_API_URL || 'https://yash-collections-backend.vercel.app/api' || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 
 // Helper function for API calls
 const apiCall = async (endpoint, options = {}) => {

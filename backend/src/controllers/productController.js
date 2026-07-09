@@ -158,10 +158,12 @@ export const createProduct = async (req, res, next) => {
       return sendError(res, HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.INVALID_INPUT, errors);
     }
 
-    // Check if product already exists
-    const existingProduct = await Product.findOne({ name: name.trim() });
+    // Check if product already exists (exact same name)
+    const existingProduct = await Product.findOne({ 
+      name: { $regex: `^${name.trim()}$`, $options: 'i' }
+    });
     if (existingProduct) {
-      return sendError(res, HTTP_STATUS.CONFLICT, 'Product with this name already exists');
+      return sendError(res, HTTP_STATUS.CONFLICT, `Product "${name.trim()}" already exists. Use a different name.`);
     }
 
     const product = await Product.create({

@@ -259,18 +259,14 @@ export const updateProduct = async (req, res, next) => {
  */
 export const deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
       logger.warn('Product not found for deletion', { productId: req.params.id });
       return sendError(res, HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.PRODUCT_NOT_FOUND);
     }
 
-    // Soft delete
-    product.isActive = false;
-    await product.save();
-
-    logger.info('Product deleted successfully', { productId: product._id });
+    logger.info('Product deleted successfully', { productId: req.params.id });
 
     return sendSuccess(res, SUCCESS_MESSAGES.PRODUCT_DELETED);
 

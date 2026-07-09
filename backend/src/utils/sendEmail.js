@@ -1,29 +1,23 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (options) => {
-  console.log('[sendEmail] Sending to:', options.email);
+  console.log('[sendEmail] Sending via Resend to:', options.email);
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,        // ← 465 ki jagah 587 (Render pe kaam karta hai)
-    secure: false,    // ← STARTTLS (SSL nahi)
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-
-  const info = await transporter.sendMail({
-    from: `"Yash Collections B2B" <${process.env.EMAIL_USER}>`,
-    to: options.email,
+  const { data, error } = await resend.emails.send({
+    from: 'Yash Collections <onboarding@resend.dev>',
+    to: [options.email],
     subject: options.subject,
     html: options.html,
   });
 
-  console.log('[sendEmail] ✅ Email sent! MessageId:', info.messageId, '→', options.email);
+  if (error) {
+    console.error('[sendEmail] ❌ Resend error:', JSON.stringify(error));
+    throw new Error(error.message || 'Failed to send email');
+  }
+
+  console.log('[sendEmail] ✅ Email sent via Resend! ID:', data?.id, '→', options.email);
   return true;
 };
 

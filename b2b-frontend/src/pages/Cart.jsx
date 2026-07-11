@@ -94,7 +94,13 @@ const Cart = () => {
               const variant = product.variants?.find(v => v._id === item.variantId);
               
               if (variant) {
-                return { ...item, maxStock: variant.quantity };
+                const newMaxStock = variant.quantity;
+                // If current qty exceeds new stock, cap it automatically
+                const newQty = Math.min(item.quantity, newMaxStock);
+                if (newQty < item.quantity) {
+                  showToast('error', `"${item.name}" stock reduced to ${newMaxStock}. Qty updated.`);
+                }
+                return { ...item, maxStock: newMaxStock, quantity: newQty };
               }
             }
           } catch (e) {
@@ -104,6 +110,8 @@ const Cart = () => {
         })
       );
       
+      // Save updated quantities back to localStorage
+      localStorage.setItem('cart', JSON.stringify(updatedItems));
       setCartItems(updatedItems);
     } catch (e) {
       // Silent fail
@@ -181,12 +189,19 @@ const Cart = () => {
         const variant = product.variants?.find(v => v._id === variantId);
         
         if (variant) {
-          // Update cart item with fresh stock
-          setCartItems(prev => prev.map(cartItem => 
-            cartItem.id === itemId 
-              ? { ...cartItem, maxStock: variant.quantity }
-              : cartItem
-          ));
+          const newMaxStock = variant.quantity;
+          setCartItems(prev => {
+            const updated = prev.map(cartItem => {
+              if (cartItem.id !== itemId) return cartItem;
+              const newQty = Math.min(cartItem.quantity, newMaxStock);
+              if (newQty < cartItem.quantity) {
+                showToast('error', `"${cartItem.name}" stock is only ${newMaxStock}. Qty adjusted.`);
+              }
+              return { ...cartItem, maxStock: newMaxStock, quantity: newQty };
+            });
+            localStorage.setItem('cart', JSON.stringify(updated));
+            return updated;
+          });
         }
       }
     } catch (e) {
@@ -317,7 +332,9 @@ const Cart = () => {
                       >+</button>
                     </div>
                     {item.maxStock !== undefined && (
-                      <span className="text-[10px] text-gray-400 mt-1 pl-1 font-medium">Max available: {Math.max(0, item.maxStock - item.quantity)}</span>
+                      item.maxStock === 0
+                        ? <span className="text-[10px] text-red-500 mt-1 pl-1 font-bold">⚠ Out of Stock</span>
+                        : <span className="text-[10px] text-gray-400 mt-1 pl-1 font-medium">Max available: {item.maxStock}</span>
                     )}
                   </div>
 

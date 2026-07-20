@@ -15,6 +15,17 @@ const ProductDetail = () => {
   const [quantities, setQuantities]         = useState({});
   const [toast, setToast]                   = useState(null);
   const [previewImage, setPreviewImage]     = useState(null);
+  const [cartCount, setCartCount]           = useState(0);
+
+  const loadCartCount = (productId) => {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const total = cart
+        .filter(item => item.productId === productId)
+        .reduce((sum, item) => sum + (item.quantity || 0), 0);
+      setCartCount(total);
+    } catch { setCartCount(0); }
+  };
 
   /* ── Fetch product from backend ── */
   const fetchProduct = async () => {
@@ -51,7 +62,13 @@ const ProductDetail = () => {
     };
 
     window.addEventListener('stockUpdated', handleStockUpdate);
-    return () => window.removeEventListener('stockUpdated', handleStockUpdate);
+    const handleCartUpdate = () => loadCartCount(id);
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    loadCartCount(id);
+    return () => {
+      window.removeEventListener('stockUpdated', handleStockUpdate);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, [id]);
 
   const showToast = (type, message) => {
@@ -436,6 +453,14 @@ const ProductDetail = () => {
                 }
               </button>
             </div>
+            {cartCount > 0 && (
+              <div className="mb-6 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl">
+                <span className="text-green-600">🛒</span>
+                <span className="text-sm font-semibold text-green-800">
+                  {cartCount} items of this product already in your cart
+                </span>
+              </div>
+            )}
 
             {/* Availability / Shipping */}
             <div className="mt-8 pt-8 border-t border-gray-200 grid grid-cols-2 gap-4">

@@ -11,6 +11,8 @@ export default function AdminProducts() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const [previewImgIdx, setPreviewImgIdx] = useState(0);
 
   useEffect(() => {
     loadProducts();
@@ -69,6 +71,43 @@ export default function AdminProducts() {
   const getTotalStock = (variants) => {
     if (!variants) return 0;
     return variants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
+  };
+
+  // Keyboard navigation for table image preview
+  useEffect(() => {
+    if (!previewProduct) return;
+    const images = [
+      ...(previewProduct.images && previewProduct.images.length > 0 ? previewProduct.images : []),
+      ...(previewProduct.image ? [previewProduct.image] : [])
+    ];
+    const uniqueImages = Array.from(new Set(images));
+    if (uniqueImages.length === 0) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setPreviewProduct(null);
+      } else if (e.key === 'ArrowLeft') {
+        setPreviewImgIdx((prev) => (prev > 0 ? prev - 1 : uniqueImages.length - 1));
+      } else if (e.key === 'ArrowRight') {
+        setPreviewImgIdx((prev) => (prev < uniqueImages.length - 1 ? prev + 1 : 0));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewProduct]);
+
+  const openTableImagePreview = (product) => {
+    setPreviewProduct(product);
+    setPreviewImgIdx(0);
+  };
+
+  const getProductImageList = (product) => {
+    if (!product) return [];
+    const imgs = [
+      ...(product.images && product.images.length > 0 ? product.images : []),
+      ...(product.image ? [product.image] : [])
+    ];
+    return Array.from(new Set(imgs));
   };
 
   return (
@@ -160,12 +199,29 @@ export default function AdminProducts() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {p.image && (
-                              <img 
-                                src={p.image} 
-                                alt={p.name}
-                                className="w-12 h-12 rounded-lg object-cover"
-                                onError={e => { e.target.style.display='none'; }}
-                              />
+                              <div
+                                className="relative group cursor-pointer flex-shrink-0"
+                                onClick={() => openTableImagePreview(p)}
+                                title="Click to preview full image"
+                              >
+                                <img 
+                                  src={p.image} 
+                                  alt={p.name}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 group-hover:border-cyan-500 transition-all group-hover:scale-105 shadow-sm"
+                                  onError={e => { e.target.style.display='none'; }}
+                                />
+                                <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </div>
+                                {p.images && p.images.length > 1 && (
+                                  <span className="absolute -top-1.5 -right-1.5 bg-cyan-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow">
+                                    {p.images.length}
+                                  </span>
+                                )}
+                              </div>
                             )}
                             <div>
                               <p className="font-bold text-sm" style={{ color: '#1b2f3e' }}>{p.name}</p>
@@ -268,6 +324,108 @@ export default function AdminProducts() {
               loadProducts();
             }}
           />
+
+          {/* Table Product Image Preview Lightbox */}
+          {previewProduct && (() => {
+            const productImages = getProductImageList(previewProduct);
+            if (productImages.length === 0) return null;
+            return (
+              <div
+                className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 select-none"
+                onClick={() => setPreviewProduct(null)}
+              >
+                {/* Top Bar */}
+                <div
+                  className="absolute top-0 left-0 right-0 p-4 sm:px-8 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent z-10"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className="text-white font-bold text-base sm:text-lg">
+                      {previewProduct.name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs px-2.5 py-0.5 rounded-full font-semibold">
+                        Image {previewImgIdx + 1} of {productImages.length}
+                      </span>
+                      <span className="bg-white/10 text-gray-300 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                        Category: {previewProduct.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setPreviewProduct(null)}
+                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white font-bold text-xl flex items-center justify-center transition"
+                    title="Close preview (Esc)"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Main Enlarged Image */}
+                <div
+                  className="relative max-w-4xl w-full max-h-[72vh] flex items-center justify-center p-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {productImages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreviewImgIdx((prev) => (prev > 0 ? prev - 1 : productImages.length - 1))
+                      }
+                      className="absolute left-2 sm:-left-12 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-cyan-600 border border-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center text-3xl font-bold transition shadow-2xl z-10"
+                      title="Previous image (← Arrow key)"
+                    >
+                      ‹
+                    </button>
+                  )}
+
+                  <img
+                    src={productImages[previewImgIdx]}
+                    alt={`${previewProduct.name} Preview`}
+                    className="max-h-[68vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/10 bg-black/40"
+                  />
+
+                  {productImages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreviewImgIdx((prev) => (prev < productImages.length - 1 ? prev + 1 : 0))
+                      }
+                      className="absolute right-2 sm:-right-12 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-cyan-600 border border-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center text-3xl font-bold transition shadow-2xl z-10"
+                      title="Next image (→ Arrow key)"
+                    >
+                      ›
+                    </button>
+                  )}
+                </div>
+
+                {/* Bottom Thumbnails */}
+                {productImages.length > 1 && (
+                  <div
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2.5 p-2 bg-black/60 backdrop-blur-md rounded-2xl border border-white/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {productImages.map((img, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setPreviewImgIdx(i)}
+                        className={`relative rounded-lg overflow-hidden transition-all duration-200 ${
+                          i === previewImgIdx
+                            ? 'ring-2 ring-cyan-400 scale-110 shadow-lg opacity-100'
+                            : 'opacity-50 hover:opacity-80'
+                        }`}
+                      >
+                        <img src={img} alt={`thumb-${i}`} className="w-12 h-12 object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </>
       )}
     </Layout>
